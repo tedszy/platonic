@@ -52,15 +52,41 @@
   (reduce #'group-compose args))
 
 (defun make-group-element (&rest data)
+  ;; if (car data) is a symbol, use that as name.
+  ;; if it is an integer, then we know name is nil 
+  ;; and it's just data.
+  (let ((name (if (symbolp (car data))
+		  (car data)
+		  nil))
+	(d (if (integerp (car data))
+		 data
+		 (cdr data))))
   (make-instance 'group-element
-		 :permutation (apply #'vector (cons 0 data))))
-
-(defparameter gg (make-group-element 4 3 2 1))
-(defparameter hh (make-group-element 2 1 4 3))
+		 :name name
+		 :permutation (apply #'vector (cons 0 d)))))
 
 ;; Tetrahedral group generators.
-(defparameter rr (make-group-element 1 3 4 2))
-(defparameter ss (make-group-element 4 1 2 3))
+(defparameter r (make-group-element 1 3 4 2))
+(defparameter s (make-group-element 4 1 2 3))
+
+;; A4/Tetrahedral group.
+(defparameter tetrahedral-group
+  (list (make-group-element     1 2 3 4)
+	(make-group-element 's2 3 4 1 2)
+	(make-group-element 's  4 3 2 1) ;; s
+
+	(make-group-element     2 1 4 3)
+	(make-group-element 'r  1 3 4 2) ;; r
+	(make-group-element 'r2 1 4 2 3)
+
+	(make-group-element 3 2 4 1)
+	(make-group-element 4 2 1 3)
+	(make-group-element 2 4 3 1)
+	
+	(make-group-element 4 1 3 2)
+	(make-group-element 2 3 1 4)
+	(make-group-element 3 1 2 4)))
+
 
 ;; configuration/state class. the group elements act on this.
 ;; it could be colorings of faces, vertices or something more
