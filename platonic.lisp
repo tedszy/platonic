@@ -19,7 +19,11 @@
 	    (loop for i from 1 below (length permutation)
 		 collecting (svref permutation i)))))
 
-(defgeneric group-compose (g h))
+(defgeneric group-compose (g h)
+  (:documentation "compose two group elements by composing permutaions"))
+
+(defgeneric group-equal (g h)
+  (:documentation "Are two group elements equal?"))
 
 ;; (1 2 3 4)
 ;; (4 3 2 1) => g
@@ -40,14 +44,23 @@
      finally (return (make-instance 'group-element
 				    :permutation perm))))
 
+(defmethod group-equal ((g group-element) (h group-element))
+  (equalp (group-element.permutation g)
+	  (group-element.permutation h)))
+
+(defun g* (&rest args)
+  (reduce #'group-compose args))
+
 (defun make-group-element (&rest data)
   (make-instance 'group-element
 		 :permutation (apply #'vector (cons 0 data))))
 
-
 (defparameter gg (make-group-element 4 3 2 1))
 (defparameter hh (make-group-element 2 1 4 3))
 
+;; Tetrahedral group generators.
+(defparameter rr (make-group-element 1 3 4 2))
+(defparameter ss (make-group-element 4 1 2 3))
 
 ;; configuration/state class. the group elements act on this.
 ;; it could be colorings of faces, vertices or something more
