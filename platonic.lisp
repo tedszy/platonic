@@ -5,29 +5,48 @@
 ;; us unused for now. This is to make permutations begin
 ;; at index 1 like in all textbooks.
 
-;; It may be useful to give group elements symbolic names like s or r or id. 
 (defclass group-element ()
   ((name :accessor group-element.name :initarg :name :initform nil)
    (permutation :accessor group-element.permutation :initarg :permutation)))
 
-;; Might want option for cyclic notiation in the future.
+;; Might want an option for cyclic notiation in the future.
 (defmethod print-object ((g group-element) stream)
   (with-slots (name permutation)
       g
     (format stream 
 	    "<~a ~a>"
 	    name
-	    permutation)))
+	    (loop for i from 1 below (length permutation)
+		 collecting (svref permutation i)))))
 
-(defgeneric group-operation (g h))
+(defgeneric group-compose (g h))
 
-(defmethod group-operation ((g group-element) (h group-element))
-  
-  )
+;; (1 2 3 4)
+;; (4 3 2 1) => g
+;;
+;; (1 2 3 4)
+;; (2 1 4 3) => h
+;;
+;; (1 2 3 4) 
+;; (3 4 1 2) => gh
+(defmethod group-compose ((g group-element) (h group-element))
+  (loop
+     with perm = (make-array (length (group-element.permutation g))) 
+     for u across (group-element.permutation g)
+     and v across (group-element.permutation h)
+     and i from 1 below (length (group-element.permutation g))
+     do (setf (svref perm i) (svref (group-element.permutation g) 
+				    (svref (group-element.permutation h) i)))
+     finally (return (make-instance 'group-element
+				    :permutation perm))))
 
 (defun make-group-element (&rest data)
   (make-instance 'group-element
-		 :permutation (apply #'vector data)))
+		 :permutation (apply #'vector (cons 0 data))))
+
+
+(defparameter gg (make-group-element 4 3 2 1))
+(defparameter hh (make-group-element 2 1 4 3))
 
 
 ;; configuration/state class. the group elements act on this.
