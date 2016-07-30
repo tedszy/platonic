@@ -14,7 +14,7 @@
   (with-slots (name permutation)
       g
     (format stream 
-	    "<~a ~a>"
+	    "(~a ~{~a~^ ~})"
 	    name
 	    (loop for i from 1 below (length permutation)
 		 collecting (svref permutation i)))))
@@ -28,9 +28,8 @@
 ;; (1 2 3 4)         (1 2 3 4)         (1 2 3 4) 
 ;; (4 3 2 1) => g    (2 1 4 3) => h    (3 4 1 2) => gh
 (defmethod group-compose ((g group-element) (h group-element))
-  (loop
-     with perm = (make-array (length (group-element.permutation g))
-			     :initial-element 0)
+  (loop with perm = (make-array (length (group-element.permutation g))
+				:initial-element 0)
      for i from 1 below (length (group-element.permutation g))
      do (setf (svref perm i) (svref (group-element.permutation g) 
 				    (svref (group-element.permutation h) i)))
@@ -45,10 +44,11 @@
   (reduce #'group-compose args))
 
 (defun make-group-element (&rest data)
-  ;; if (car data) is a symbol, use that as name.
-  ;; if it is an integer, then we know name is nil 
-  ;; and it's just data.
-  (let ((name (if (symbolp (car data))
+  ;; if (car data) is not an integer, it is the name of the group
+  ;; elment. If it is an integer, then we know name is nil.
+  ;; We may use symbols, strings or even lists as names (who knows
+  ;; what we will need in the future? So better to say 'not ingegerp'.
+  (let ((name (if (not (integerp (car data)))
 		  (car data)
 		  nil))
 	(d (if (integerp (car data))
@@ -59,6 +59,9 @@
 		 :permutation (apply #'vector (cons 0 d)))))
 
 ;; Tetrahedral group generators.
+;; Standard vertex-edge-face labelling (see graphic).
+;; r => 120 degree twist through axis on vertex1 and base 1.
+;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
 (defparameter r (make-group-element 1 3 4 2))
 (defparameter s (make-group-element 4 3 2 1))
 
