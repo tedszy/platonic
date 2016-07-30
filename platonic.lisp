@@ -25,20 +25,13 @@
 (defgeneric group-equal (g h)
   (:documentation "Are two group elements equal?"))
 
-;; (1 2 3 4)
-;; (4 3 2 1) => g
-;;
-;; (1 2 3 4)
-;; (2 1 4 3) => h
-;;
-;; (1 2 3 4) 
-;; (3 4 1 2) => gh
+;; (1 2 3 4)         (1 2 3 4)         (1 2 3 4) 
+;; (4 3 2 1) => g    (2 1 4 3) => h    (3 4 1 2) => gh
 (defmethod group-compose ((g group-element) (h group-element))
   (loop
-     with perm = (make-array (length (group-element.permutation g))) 
-     for u across (group-element.permutation g)
-     and v across (group-element.permutation h)
-     and i from 1 below (length (group-element.permutation g))
+     with perm = (make-array (length (group-element.permutation g))
+			     :initial-element 0)
+     for i from 1 below (length (group-element.permutation g))
      do (setf (svref perm i) (svref (group-element.permutation g) 
 				    (svref (group-element.permutation h) i)))
      finally (return (make-instance 'group-element
@@ -67,25 +60,25 @@
 
 ;; Tetrahedral group generators.
 (defparameter r (make-group-element 1 3 4 2))
-(defparameter s (make-group-element 4 1 2 3))
+(defparameter s (make-group-element 4 3 2 1))
 
 ;; A4/Tetrahedral group.
 (defparameter tetrahedral-group
-  (list (make-group-element     1 2 3 4)
-	(make-group-element 's2 3 4 1 2)
-	(make-group-element 's  4 3 2 1) ;; s
+  (list (make-group-element 'ss   1 2 3 4)
+	(make-group-element 'rrsr 3 4 1 2)
+	(make-group-element 's    4 3 2 1) 
 
-	(make-group-element     2 1 4 3)
-	(make-group-element 'r  1 3 4 2) ;; r
-	(make-group-element 'r2 1 4 2 3)
+	(make-group-element 'rsrr 2 1 4 3)
+	(make-group-element 'r    1 3 4 2) 
+	(make-group-element 'rr   1 4 2 3)
 
-	(make-group-element 3 2 4 1)
-	(make-group-element 4 2 1 3)
-	(make-group-element 2 4 3 1)
+	(make-group-element 'rrs 3 2 4 1)
+	(make-group-element 'sr  4 2 1 3)
+	(make-group-element 'rs  2 4 3 1)
 	
-	(make-group-element 4 1 3 2)
-	(make-group-element 2 3 1 4)
-	(make-group-element 3 1 2 4)))
+	(make-group-element 'srr 4 1 3 2)
+	(make-group-element 'rsr 2 3 1 4)
+	(make-group-element 'srs 3 1 2 4)))
 
 
 ;; configuration/state class. the group elements act on this.
