@@ -70,22 +70,47 @@
   (list (make-group-element 'ss   1 2 3 4)
 	(make-group-element 'rrsr 3 4 1 2)
 	(make-group-element 's    4 3 2 1) 
-
 	(make-group-element 'rsrr 2 1 4 3)
 	(make-group-element 'r    1 3 4 2) 
 	(make-group-element 'rr   1 4 2 3)
-
 	(make-group-element 'rrs 3 2 4 1)
 	(make-group-element 'sr  4 2 1 3)
 	(make-group-element 'rs  2 4 3 1)
-	
 	(make-group-element 'srr 4 1 3 2)
 	(make-group-element 'rsr 2 3 1 4)
 	(make-group-element 'srs 3 1 2 4)))
 
+(defgeneric apply-group-element (g v)
+  (:documentation "Transform an object by group element."))
+
+;; Transform vertex.
+(defmethod apply-group-element ((g group-element) (v integer))
+  (svref (group-element.permutation g) v))
+
+;; Transform face.
+(defmethod apply-group-element ((g group-element) (f list))
+  (loop for v in f
+     collecting (svref (group-element.permutation g) v)))
+
+;; Ordering for faces. (1 2 5) < (1 3 4).
+(defun face< (fa fb)
+  (loop 
+     for a in fa
+     and b in fb 
+     when (>= a b)
+     return nil
+     finally (return t)))
+
+
 
 ;; configuration/state class. the group elements act on this.
 ;; it could be colorings of faces, vertices or something more
-;; creative.
+;; creative. 
+;;
+;; On the other hand, a configuration could simply be an alist.
+
+
+
+
 
 
