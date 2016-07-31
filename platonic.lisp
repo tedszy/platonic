@@ -58,20 +58,32 @@
 		 :name name
 		 :permutation (apply #'vector (cons 0 d)))))
 
-(defgeneric apply-group-element (g v)
-  (:documentation "Transform an object by group element."))
 
-;; Transform vertex.
-(defmethod apply-group-element ((g group-element) (v integer))
-  (svref (group-element.permutation g) v))
 
-;; Transform face.
-(defmethod apply-group-element ((g group-element) (f list))
-  (sort (loop for v in f
-	   collecting (svref (group-element.permutation g) v))
-	#'<))
+
+;; make vertices and faces into classes with methods
+;; that handle sorting on creation etc. 
+
+
+(defclass vertex ()
+  ((label :accessor vertex.label :initarg :label)))
+
+(defclass face ()
+  ((vertices :accessor face.vertices :initarg :vertices)))
+
+(defmethod print-object ((v vertex) stream)
+  (format stream
+	  "<~a>"
+	  (vertex.label v)))
+
+(defmethod print-object ((f face) stream)
+  (format stream
+	  "[~{~a~^ ~}]"
+	  (face.vertices f)))
 
 ;; Ordering of vertices is easy, they are just integers.
+(defun vertex< (v1 v2) (< v1 v2))
+
 ;; But faces are lists, so we must devise some way to order them.
 ;; Ordering for faces. (1 2 5) < (1 3 4). We cannot have
 ;; two equal faces in the same solid.
@@ -93,6 +105,35 @@
 (defun face= (fa fb)
   (equalp (sort fa #'<)
 	  (sort fb #'<)))
+
+(defun make-vertex (l)
+  (make-instance 'vertex :label l))
+
+(defun make-face (vl)
+  (make-instance 'face
+		 :vertices (sort vl #'vertex<)))
+
+(defgeneric apply-group-element (g v)
+  (:documentation "Transform an object by group element."))
+
+;; Transform vertex.
+(defmethod apply-group-element ((g group-element) (v vertex))
+  (make-vertex (svref (group-element.permutation g) (vertex.label v))))
+
+;; Transform face.
+(defmethod apply-group-element ((g group-element) (f list))
+  (sort (loop for v in f
+	   collecting (svref (group-element.permutation g) v))
+	#'<))
+
+
+
+
+
+(defparameter v1 (make-vertex 2))
+(defparameter f1 (make-face '(1 3 2)))
+
+
   
 (defparameter *tetrahedron-vertices* '(1 2 3 4))
 (defparameter *tetrahedron-faces* 
@@ -102,23 +143,46 @@
 ;; Standard vertex-edge-face labelling (see graphic).
 ;; r => 120 degree twist through axis on vertex1 and base 1.
 ;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
-(defparameter r (make-group-element 1 3 4 2))
-(defparameter s (make-group-element 4 3 2 1))
 
-;; A4/Tetrahedral group.
+(defun rename (g new-name) 
+  (setf (group-element.name g) new-name)
+  g)
+
+(defparameter s  (make-group-element 's 4 3 2 1)) 
+(defparameter r  (make-group-element 'r 1 3 4 2)) 
+(defparameter ss (rename (g* s s) 'ss))
+(defparameter rr (rename (g* r r) 'rr))
+(defparameter sr (rename (g* s r) 'sr))
+(defparameter rs (rename (g* r s) 'rs))
+(defparameter rsr (rename (g* r s r) 'rsr))
+(defparameter srs (rename (g* s r s) 'srs))
+(defparameter rrs (rename (g* r r s) 'rrs))
+(defparameter srr (rename (g* s r r) 'srr))
+(defparameter rrsr (rename (g* r r s r) 'rrsr))
+(defparameter rsrr (rename (g* r s r r) 'rsrr))
+
+;; Eventually want something better so that, say
+;; (r 1 3 4 2) * (s 4 3 2 1) = (rs 2 4 3 1) by lookup in table.
 (defparameter tetrahedral-group
-  (list (make-group-element 'ss   1 2 3 4)
-	(make-group-element 'rrsr 3 4 1 2)
-	(make-group-element 's    4 3 2 1) 
-	(make-group-element 'rsrr 2 1 4 3)
-	(make-group-element 'r    1 3 4 2) 
-	(make-group-element 'rr   1 4 2 3)
-	(make-group-element 'rrs 3 2 4 1)
-	(make-group-element 'sr  4 2 1 3)
-	(make-group-element 'rs  2 4 3 1)
-	(make-group-element 'srr 4 1 3 2)
-	(make-group-element 'rsr 2 3 1 4)
-	(make-group-element 'srs 3 1 2 4)))
+  (list s r ss rr sr rs rsr srs rrs srr rrsr rsrr))
+
+(defclass group ()
+  ((elements :accessor group.elements :initarg :elements :initform nil)))
+
+(defmethod print-object ((gp group) stream)
+  (format stream
+	  "<~{~a~^, ~}>"
+	  (group.elements gp)))
+
+(defparameter tetra (make-instance 'group
+				   :elements tetrahedral-group))
+
+(defun group* (gp a b)
+  (find (g* a b) 
+	(group.elements gp) 
+	:test #'group-equal))
+
+
 
 ;; configuration/state the group elements act on this.
 ;; it could be colorings of faces, vertices or something more
