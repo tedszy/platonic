@@ -58,6 +58,46 @@
 		 :name name
 		 :permutation (apply #'vector (cons 0 d)))))
 
+(defgeneric apply-group-element (g v)
+  (:documentation "Transform an object by group element."))
+
+;; Transform vertex.
+(defmethod apply-group-element ((g group-element) (v integer))
+  (svref (group-element.permutation g) v))
+
+;; Transform face.
+(defmethod apply-group-element ((g group-element) (f list))
+  (sort (loop for v in f
+	   collecting (svref (group-element.permutation g) v))
+	#'<))
+
+;; Ordering of vertices is easy, they are just integers.
+;; But faces are lists, so we must devise some way to order them.
+;; Ordering for faces. (1 2 5) < (1 3 4). We cannot have
+;; two equal faces in the same solid.
+(defun face< (fa fb)
+  (loop 
+     with ra = (reverse (sort fa #'<))
+     with rb = (reverse (sort fb #'<))
+     with multiplier = 1
+     with resa = 0
+     with resb = 0
+     for a in ra
+     and b in rb
+     do 
+       (incf resa (* a multiplier))
+       (incf resb (* b multiplier))
+       (setf multiplier (* multiplier 10))
+     finally (return (< resa resb))))
+ 
+(defun face= (fa fb)
+  (equalp (sort fa #'<)
+	  (sort fb #'<)))
+  
+(defparameter *tetrahedron-vertices* '(1 2 3 4))
+(defparameter *tetrahedron-faces* 
+  (sort '((1 2 3) (1 3 4) (1 4 2) (2 3 4)) #'face<))
+
 ;; Tetrahedral group generators.
 ;; Standard vertex-edge-face labelling (see graphic).
 ;; r => 120 degree twist through axis on vertex1 and base 1.
@@ -80,37 +120,10 @@
 	(make-group-element 'rsr 2 3 1 4)
 	(make-group-element 'srs 3 1 2 4)))
 
-(defgeneric apply-group-element (g v)
-  (:documentation "Transform an object by group element."))
-
-;; Transform vertex.
-(defmethod apply-group-element ((g group-element) (v integer))
-  (svref (group-element.permutation g) v))
-
-;; Transform face.
-(defmethod apply-group-element ((g group-element) (f list))
-  (loop for v in f
-     collecting (svref (group-element.permutation g) v)))
-
-;; Ordering for faces. (1 2 5) < (1 3 4).
-(defun face< (fa fb)
-  (loop 
-     for a in fa
-     and b in fb 
-     when (>= a b)
-     return nil
-     finally (return t)))
-
-
-
-;; configuration/state class. the group elements act on this.
+;; configuration/state the group elements act on this.
 ;; it could be colorings of faces, vertices or something more
-;; creative. 
-;;
-;; On the other hand, a configuration could simply be an alist.
+;; creative. A configuration could simply be an alist.
 
-
-
-
+;;(defun make-face-configuration 
 
 
