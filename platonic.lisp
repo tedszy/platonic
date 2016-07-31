@@ -6,85 +6,118 @@
 ;; at index 1 like in all textbooks.
 
 (defclass group-element ()
-  ((name :accessor group-element.name :initarg :name :initform nil)
-   (permutation :accessor group-element.permutation :initarg :permutation)))
+  ((permutation :accessor group-element.permutation :initarg :permutation)))
 
-;; Might want an option for cyclic notiation in the future.
 (defmethod print-object ((g group-element) stream)
-  (with-slots (name permutation)
-      g
+  (let ((p (group-element.permutation g)))
     (format stream 
-	    "(~a ~{~a~^ ~})"
-	    name
-	    (loop for i from 1 below (length permutation)
-		 collecting (svref permutation i)))))
+	    "<~{~a~^ ~}>" 
+	    (loop for i from 1 below (length p)
+		 collecting (svref p i)))))
 
-(defgeneric group-compose (g h)
-  (:documentation "compose two group elements by composing permutaions"))
+(defun make-group-element (&rest data)
+  (make-instance 'group-element
+		 :permutation (apply #'vector (cons 0 data))))
 
-(defgeneric group-equal (g h)
-  (:documentation "Are two group elements equal?"))
+(defgeneric group-element-* (g h)
+  (:documentation "compose two group elements by composing the permutations 
+that define them."))
+
+(defgeneric group-element-equalp (g h)
+  (:documentation "T if two group elements are equal."))
 
 ;; (1 2 3 4)         (1 2 3 4)         (1 2 3 4) 
-;; (4 3 2 1) => g    (2 1 4 3) => h    (3 4 1 2) => gh
-(defmethod group-compose ((g group-element) (h group-element))
-  (loop with perm = (make-array (length (group-element.permutation g))
-				:initial-element 0)
-     for i from 1 below (length (group-element.permutation g))
-     do (setf (svref perm i) (svref (group-element.permutation g) 
-				    (svref (group-element.permutation h) i)))
-     finally (return (make-instance 'group-element
-				    :permutation perm))))
+;; (4 3 2 1) => g    (2 1 4 3) => h    (3 4 1 2) => g*h
+(defmethod group-element-* ((g group-element) (h group-element))
+  (let ((pg (group-element.permutation g))
+	(ph (group-element.permutation h)))
+    (loop with perm = (make-array (length pg) :initial-element 0)
+	 for i from 1 below (length pg)
+	 do (setf (svref perm i) (svref pg (svref ph i)))
+	 finally (return (make-instance 'group-element
+					:permutation perm)))))
 
-(defmethod group-equal ((g group-element) (h group-element))
+;; Convenience.
+(defmethod g* (&rest elements) (reduce #'group-element-* elements))
+
+(defmethod group-element-equalp (g h)
   (equalp (group-element.permutation g)
 	  (group-element.permutation h)))
 
-(defun g* (&rest args)
-  (reduce #'group-compose args))
+;; Ordering within faces and edges and so on should not matter.
+;; Vertex has one label, edge has two, faces have three or more.
+;; If all are represented by lists of integers (including verticies,
+;; which are lists of one integer) then we have a uniform interface.
 
-(defun make-group-element (&rest data)
-  ;; if (car data) is not an integer, it is the name of the group
-  ;; elment. If it is an integer, then we know name is nil.
-  ;; We may use symbols, strings or even lists as names (who knows
-  ;; what we will need in the future? So better to say 'not ingegerp'.
-  (let ((name (if (not (integerp (car data)))
-		  (car data)
-		  nil))
-	(d (if (integerp (car data))
-		 data
-		 (cdr data))))
-  (make-instance 'group-element
-		 :name name
-		 :permutation (apply #'vector (cons 0 d)))))
+(defclass geometric () ((label-list :accessor geometric.label-list :initarg :label-list)))
+
+(defun make-geometric (label-list)
+  (make-instance 'geometric :label-list label-list))
+
+(defmethod print-object ((geo geometric) stream) 
+  (format stream "[~{~a~^ ~}]" (geometric.label-list geo))) 
+			
+(defgeneric group-element-apply (g v)
+  (:documentation "Transform a vertex/edge/face by applying group element."))
+
+;; Transform vertex/edge/face.
+(defmethod group-element-apply ((g group-element) (geo geometric))
+  (make-geometric (loop for v in (geometric.label-list geo)
+		     collecting (svref (group-element.permutation g) v))))
+  
+;; Base class for vertex/edge/face+coloring configurations.
+(defclass configuration () ())
+
+(defclass face-colors (configuration)
+  ((data :accessor face-colors.data :initarg :data)))
+
+(defmethod group-element-apply ((g group-element) (fc face-colors))
+  (make-instance 'face-colors
+		 :data (loop
+			  for f in (face-colors.data fc)
+			  collecting (cons (group-element-apply g (car f))
+					   (cdr f)))))
+
+(defmethod print-object ((fc face-colors) stream)
+  (format stream 
+	  "(face-colors ~{~a~^ ~})"
+	  (face-colors.data fc)))
+
+(defun make-tetrahedron-face-colors (color-data)
+  (let ((tetra-faces (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4)))))
+    (make-instance 'face-colors
+		   :data (loop 
+			    for f in tetra-faces
+			    and c in color-data
+			    collecting (cons f c)))))
+  
+;; Tetrahedral rotational symmetry group generators.
+;; Standard vertex-edge-face labelling (see graphic).
+;; r => 120 degree twist through axis on vertex1 and base 1.
+;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
+(defparameter s  (make-group-element 4 3 2 1)) 
+(defparameter r  (make-group-element 1 3 4 2)) 
+
+(defparameter tetrahedral-group
+  (list s r 
+	(g* s s) (g* r r) (g* s r) (g* r s)
+	(g* r s r) (g* r r s) (g* s r r)
+	(g* r r s r) (g* r s r r)))
+
+;; Example of vertex, edge, face.
+(defparameter vv (make-geometric '(3)))
+(defparameter ee (make-geometric '(1 4)))
+(defparameter ff (make-geometric '(1 2 3)))
+
+;; Assign colors to tetrahedron faces.
+(defparameter fc1 (make-tetrahedron-face-colors '(r g b w)))
 
 
 
 
-;; make vertices and faces into classes with methods
-;; that handle sorting on creation etc. 
 
+#|
 
-(defclass vertex ()
-  ((label :accessor vertex.label :initarg :label)))
-
-(defclass face ()
-  ((vertices :accessor face.vertices :initarg :vertices)))
-
-(defmethod print-object ((v vertex) stream)
-  (format stream
-	  "<~a>"
-	  (vertex.label v)))
-
-(defmethod print-object ((f face) stream)
-  (format stream
-	  "[~{~a~^ ~}]"
-	  (face.vertices f)))
-
-;; Ordering of vertices is easy, they are just integers.
-(defun vertex< (v1 v2) (< v1 v2))
-
-;; But faces are lists, so we must devise some way to order them.
 ;; Ordering for faces. (1 2 5) < (1 3 4). We cannot have
 ;; two equal faces in the same solid.
 (defun face< (fa fb)
@@ -106,88 +139,5 @@
   (equalp (sort fa #'<)
 	  (sort fb #'<)))
 
-(defun make-vertex (l)
-  (make-instance 'vertex :label l))
 
-(defun make-face (vl)
-  (make-instance 'face
-		 :vertices (sort vl #'vertex<)))
-
-(defgeneric apply-group-element (g v)
-  (:documentation "Transform an object by group element."))
-
-;; Transform vertex.
-(defmethod apply-group-element ((g group-element) (v vertex))
-  (make-vertex (svref (group-element.permutation g) (vertex.label v))))
-
-;; Transform face.
-(defmethod apply-group-element ((g group-element) (f list))
-  (sort (loop for v in f
-	   collecting (svref (group-element.permutation g) v))
-	#'<))
-
-
-
-
-
-(defparameter v1 (make-vertex 2))
-(defparameter f1 (make-face '(1 3 2)))
-
-
-  
-(defparameter *tetrahedron-vertices* '(1 2 3 4))
-(defparameter *tetrahedron-faces* 
-  (sort '((1 2 3) (1 3 4) (1 4 2) (2 3 4)) #'face<))
-
-;; Tetrahedral group generators.
-;; Standard vertex-edge-face labelling (see graphic).
-;; r => 120 degree twist through axis on vertex1 and base 1.
-;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
-
-(defun rename (g new-name) 
-  (setf (group-element.name g) new-name)
-  g)
-
-(defparameter s  (make-group-element 's 4 3 2 1)) 
-(defparameter r  (make-group-element 'r 1 3 4 2)) 
-(defparameter ss (rename (g* s s) 'ss))
-(defparameter rr (rename (g* r r) 'rr))
-(defparameter sr (rename (g* s r) 'sr))
-(defparameter rs (rename (g* r s) 'rs))
-(defparameter rsr (rename (g* r s r) 'rsr))
-(defparameter srs (rename (g* s r s) 'srs))
-(defparameter rrs (rename (g* r r s) 'rrs))
-(defparameter srr (rename (g* s r r) 'srr))
-(defparameter rrsr (rename (g* r r s r) 'rrsr))
-(defparameter rsrr (rename (g* r s r r) 'rsrr))
-
-;; Eventually want something better so that, say
-;; (r 1 3 4 2) * (s 4 3 2 1) = (rs 2 4 3 1) by lookup in table.
-(defparameter tetrahedral-group
-  (list s r ss rr sr rs rsr srs rrs srr rrsr rsrr))
-
-(defclass group ()
-  ((elements :accessor group.elements :initarg :elements :initform nil)))
-
-(defmethod print-object ((gp group) stream)
-  (format stream
-	  "<~{~a~^, ~}>"
-	  (group.elements gp)))
-
-(defparameter tetra (make-instance 'group
-				   :elements tetrahedral-group))
-
-(defun group* (gp a b)
-  (find (g* a b) 
-	(group.elements gp) 
-	:test #'group-equal))
-
-
-
-;; configuration/state the group elements act on this.
-;; it could be colorings of faces, vertices or something more
-;; creative. A configuration could simply be an alist.
-
-;;(defun make-face-configuration 
-
-
+|#
