@@ -64,32 +64,62 @@ that define them."))
 (defmethod group-element-apply ((g group-element) (geo geometric))
   (make-geometric (loop for v in (geometric.label-list geo)
 		     collecting (svref (group-element.permutation g) v))))
-  
-;; Base class for vertex/edge/face+coloring configurations.
-(defclass configuration () ())
 
-(defclass face-colors (configuration)
-  ((data :accessor face-colors.data :initarg :data)))
+;; Slots consist of alists.
+(defclass configuration ()
+  ((vertices :accessor configuration.vertices :initarg :vertices :initform nil)
+   (edges :accessor configuration.edges :initarg :edges :initform nil)
+   (faces :accessor configuration.faces :initarg :faces :initform nil)))
 
-(defmethod group-element-apply ((g group-element) (fc face-colors))
-  (make-instance 'face-colors
-		 :data (loop
-			  for f in (face-colors.data fc)
-			  collecting (cons (group-element-apply g (car f))
-					   (cdr f)))))
+(defmethod print-object ((c configuration) stream)
+  (format stream
+	  "~&(vertices ~{~a~^ ~}~& edges ~{~a~^ ~}~& faces ~{~a~^ ~}"
+	  (configuration.vertices c)
+	  (configuration.edges c)
+	  (configuration.faces c)))
 
-(defmethod print-object ((fc face-colors) stream)
-  (format stream 
-	  "(face-colors ~{~a~^ ~})"
-	  (face-colors.data fc)))
+;; Data lists.
+(defun make-configuration (&key (vertex-data nil) (edge-data nil) (face-data nil))
+  (let ((vertices (mapcar #'make-geometric '((1) (2) (3) (4))))
+	(edges (mapcar #'make-geometric '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4))))
+	(faces (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4)))))
+    (make-instance 'configuration
+		   :vertices (loop 
+				for v in vertices
+				and vd in vertex-data
+				collecting (cons v vd))
+		   :edges (loop 
+			     for e in edges
+			     and ed in edge-data
+			     collecting (cons e ed))
+		   :faces (loop 
+			     for f in faces
+			     and fd in face-data
+			     collecting (cons f fd)))))
 
-(defun make-tetrahedron-face-colors (color-data)
-  (let ((tetra-faces (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4)))))
-    (make-instance 'face-colors
-		   :data (loop 
-			    for f in tetra-faces
-			    and c in color-data
-			    collecting (cons f c)))))
+;; Acts on vertices, edges, faces. 
+(defmethod group-element-apply ((g group-element) (c configuration))
+  (make-instance 'configuration
+		 :vertices (loop 
+			      for v in (configuration.vertices c)
+			      collecting (cons (group-element-apply g (car v))
+					       (cdr v)))
+		 :edges (loop
+			   for e in (configuration.edges c)
+			   collecting (cons (group-element-apply g (car e))
+					    (cdr e)))
+		 :faces (loop
+			   for f in (configuration.faces c)
+			   collecting (cons (group-element-apply g (car f))
+					    (cdr f)))))
+
+
+
+
+
+(defparameter c1 (make-configuration :vertex-data '(r r b b) 
+				     :edge-data '(w w w r r r) 
+				     :face-data '(r g b w)))
   
 ;; Tetrahedral rotational symmetry group generators.
 ;; Standard vertex-edge-face labelling (see graphic).
@@ -104,13 +134,6 @@ that define them."))
 	(g* r s r) (g* r r s) (g* s r r)
 	(g* r r s r) (g* r s r r)))
 
-;; Example of vertex, edge, face.
-(defparameter vv (make-geometric '(3)))
-(defparameter ee (make-geometric '(1 4)))
-(defparameter ff (make-geometric '(1 2 3)))
-
-;; Assign colors to tetrahedron faces.
-(defparameter fc1 (make-tetrahedron-face-colors '(r g b w)))
 
 
 
