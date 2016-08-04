@@ -113,14 +113,41 @@ that define them."))
 			   collecting (cons (group-element-apply g (car f))
 					    (cdr f)))))
 
+;; Specialize to just faces.
+(defclass face-config (configuration) ())
+
+(defmethod print-object ((fc face-config) stream)
+  (format stream
+	  "~&(faces ~{~a~^ ~}"
+	  (configuration.faces fc)))
+    
+(defun make-face-config (face-data)
+  (let ((faces (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4)))))
+    (make-instance 'face-config
+		   :faces (loop 
+			     for f in faces
+			     and fd in face-data
+			     collecting (cons f fd)))))
+
+(defmethod group-element-apply ((g group-element) (fc face-config))
+  (make-instance 'face-config
+		 :faces (loop
+			   for f in (configuration.faces fc)
+			   collecting (cons (group-element-apply g (car f))
+					    (cdr f)))))
 
 
 
+
+;; ==================== for testing ===========================
 
 (defparameter c1 (make-configuration :vertex-data '(r r b b) 
 				     :edge-data '(w w w r r r) 
 				     :face-data '(r g b w)))
-  
+
+(defparameter fc1 (make-face-config '(r g b w)))  
+
+
 ;; Tetrahedral rotational symmetry group generators.
 ;; Standard vertex-edge-face labelling (see graphic).
 ;; r => 120 degree twist through axis on vertex1 and base 1.
