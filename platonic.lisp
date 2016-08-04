@@ -52,7 +52,7 @@ that define them."))
 (defclass geometric () ((label-list :accessor geometric.label-list :initarg :label-list)))
 
 (defun make-geometric (label-list)
-  (make-instance 'geometric :label-list label-list))
+  (make-instance 'geometric :label-list (sort label-list #'<)))
 
 (defmethod print-object ((geo geometric) stream) 
   (format stream "[~{~a~^ ~}]" (geometric.label-list geo))) 
@@ -165,6 +165,11 @@ that define them."))
 				 do (push (list a b c d) result)))))
 	    result)))
 
+;; When are two face configurations equivalent?
+(defun equivalent-face-configs-p (fc1 fc2)
+  
+
+  )
 
 
 ;; ==================== for testing ===========================
