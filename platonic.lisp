@@ -136,19 +136,8 @@ that define them."))
 			   collecting (cons (group-element-apply g (car f))
 					    (cdr f)))))
 
+;; Define group of tetrahedral rotational symmetries. Two generators r, s.
 
-
-
-;; ==================== for testing ===========================
-
-(defparameter c1 (make-configuration :vertex-data '(r r b b) 
-				     :edge-data '(w w w r r r) 
-				     :face-data '(r g b w)))
-
-(defparameter fc1 (make-face-config '(r g b w)))  
-
-
-;; Tetrahedral rotational symmetry group generators.
 ;; Standard vertex-edge-face labelling (see graphic).
 ;; r => 120 degree twist through axis on vertex1 and base 1.
 ;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
@@ -161,8 +150,30 @@ that define them."))
 	(g* r s r) (g* r r s) (g* s r r)
 	(g* r r s r) (g* r s r r)))
 
+;; Generate all face colorings (256 of them).
+;; Red, green, blue, white.
+(defparameter all-face-configs
+  (mapcar #'make-face-config
+	  (let ((colors '(r g b w))
+		(result nil))
+	    (loop 
+	       for a in colors 
+	       do (loop 
+		     for b in colors
+		     do (loop for c in colors 
+			   do (loop for d in colors 
+				 do (push (list a b c d) result)))))
+	    result)))
 
 
+
+;; ==================== for testing ===========================
+
+(defparameter c1 (make-configuration :vertex-data '(r r b b) 
+				     :edge-data '(w w w r r r) 
+				     :face-data '(r g b w)))
+
+(defparameter fc1 (make-face-config '(r g b w)))  
 
 
 
