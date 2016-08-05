@@ -49,6 +49,15 @@ that define them."))
 
 (defmethod print-object ((geo geometric) stream) 
   (format stream "[~{~a~^ ~}]" (geometric.label-list geo))) 
+
+;; Compare two vertices/edges/faces.
+(defun geometric-equal-p (g h)
+  (not (set-exclusive-or (geometric.label-list g)
+			 (geometric.label-list h))))
+
+;; Testing
+(defparameter gg1 (make-geometric '(3 2 1)))
+(defparameter gg2 (make-geometric '(2 1 3)))
 			
 (defgeneric group-element-apply (g v)
   (:documentation "Transform a vertex/edge/face by applying group element."))
@@ -71,24 +80,28 @@ that define them."))
 	  (configuration.edges c)
 	  (configuration.faces c)))
 
+(defparameter *tetrahedron-vertices* 
+  (mapcar #'make-geometric '((1) (2) (3) (4))))
+(defparameter *tetrahedron-edges* 
+  (mapcar #'make-geometric '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4))))
+(defparameter *tetrahedron-faces* 
+  (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4))))
+
 ;; Data lists.
 (defun make-configuration (&key (vertex-data nil) (edge-data nil) (face-data nil))
-  (let ((vertices (mapcar #'make-geometric '((1) (2) (3) (4))))
-	(edges (mapcar #'make-geometric '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4))))
-	(faces (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4)))))
     (make-instance 'configuration
 		   :vertices (loop 
-				for v in vertices
+				for v in *tetrahedron-vertices*
 				and vd in vertex-data
 				collecting (cons v vd))
 		   :edges (loop 
-			     for e in edges
+			     for e in *tetrahedron-edges*
 			     and ed in edge-data
 			     collecting (cons e ed))
 		   :faces (loop 
-			     for f in faces
+			     for f in *tetrahedron-faces*
 			     and fd in face-data
-			     collecting (cons f fd)))))
+			     collecting (cons f fd))))
 
 ;; Acts on vertices, edges, faces. 
 (defmethod group-element-apply ((g group-element) (c configuration))
