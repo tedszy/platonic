@@ -67,18 +67,8 @@ that define them."))
   (make-geometric (loop for v in (geometric.label-list geo)
 		     collecting (svref (group-element.permutation g) v))))
 
-;; Slots consist of alists.
-(defclass configuration ()
-  ((vertices :accessor configuration.vertices :initarg :vertices :initform nil)
-   (edges :accessor configuration.edges :initarg :edges :initform nil)
-   (faces :accessor configuration.faces :initarg :faces :initform nil)))
 
-(defmethod print-object ((c configuration) stream)
-  (format stream
-	  "~&(vertices ~{~a~^ ~}~& edges ~{~a~^ ~}~& faces ~{~a~^ ~}"
-	  (configuration.vertices c)
-	  (configuration.edges c)
-	  (configuration.faces c)))
+;; ============ Tetrahedron setup ====================
 
 (defparameter *tetrahedron-vertices* 
   (mapcar #'make-geometric '((1) (2) (3) (4))))
@@ -86,6 +76,49 @@ that define them."))
   (mapcar #'make-geometric '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4))))
 (defparameter *tetrahedron-faces* 
   (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4))))
+
+;; Define group of tetrahedral rotational symmetries. Two generators r, s.
+
+;; Standard vertex-edge-face labelling (see graphic).
+;; r => 120 degree twist through axis on vertex1 and base 1.
+;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
+(defparameter s  (make-group-element 4 3 2 1)) 
+(defparameter r  (make-group-element 1 3 4 2)) 
+
+(defparameter tetrahedral-group
+  (list s r 
+	(g* s s) (g* r r) (g* s r) (g* r s)
+	(g* r s r) (g* r r s) (g* s r r)
+	(g* r r s r) (g* r s r r)))
+
+(defparameter tgroup
+  (mapcar #'(lambda (u) 
+	      (apply #'make-group-element u)) 
+	  '((1 2 3 4) (3 4 1 2) (4 3 2 1)
+	    (2 1 4 3) (1 3 4 2) (1 4 3 2)
+	    (3 2 4 1) (4 2 1 3) (2 4 3 1)
+	    (4 1 3 2) (2 3 1 4) (3 1 2 4))))
+
+;; ==================================================
+
+;; Slots consist of alists.
+(defclass configuration ()
+  ((vertices :accessor configuration.vertices :initarg :vertices :initform nil)
+   (edges :accessor configuration.edges :initarg :edges :initform nil)
+   (faces :accessor configuration.faces :initarg :faces :initform nil)))
+
+;; Checks if slot is nil, ignores it if so.
+(defmethod print-object ((c configuration) stream)
+  (with-slots (vertices edges faces)
+      c
+    (when (not (null vertices))
+      (format stream "~&(vertices ~{~a~^ ~}" vertices))
+    (when (not (null edges))
+      (format stream "~&(edges ~{~a~^ ~}" edges))
+    (when (not (null faces))
+      (format stream "~&(faces ~{~a~^ ~}" faces))
+    (when (and (null vertices) (null edges) (null faces))
+      (format stream "~&(configuration nil)"))))
 
 ;; Data lists.
 (defun make-configuration (&key (vertex-data nil) (edge-data nil) (face-data nil))
@@ -103,7 +136,12 @@ that define them."))
 			     and fd in face-data
 			     collecting (cons f fd))))
 
-;; Acts on vertices, edges, faces. 
+(defparameter cc1 (make-configuration )) ;;:vertex-data '(r g b w)
+				    ;;  :edge-data '(r r r r r r)
+				      ;; :face-data '(b b g g)))
+
+
+;; Group elment transformation on vertices, edges, faces. 
 (defmethod group-element-apply ((g group-element) (c configuration))
   (make-instance 'configuration
 		 :vertices (loop 
@@ -118,6 +156,23 @@ that define them."))
 			   for f in (configuration.faces c)
 			   collecting (cons (group-element-apply g (car f))
 					    (cdr f)))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ;; Specialize to just faces.
 (defclass face-config (configuration) ())
@@ -141,28 +196,6 @@ that define them."))
 			   for f in (configuration.faces fc)
 			   collecting (cons (group-element-apply g (car f))
 					    (cdr f)))))
-
-;; Define group of tetrahedral rotational symmetries. Two generators r, s.
-
-;; Standard vertex-edge-face labelling (see graphic).
-;; r => 120 degree twist through axis on vertex1 and base 1.
-;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
-(defparameter s  (make-group-element 4 3 2 1)) 
-(defparameter r  (make-group-element 1 3 4 2)) 
-
-(defparameter tetrahedral-group
-  (list s r 
-	(g* s s) (g* r r) (g* s r) (g* r s)
-	(g* r s r) (g* r r s) (g* s r r)
-	(g* r r s r) (g* r s r r)))
-
-(defparameter tgroup
-  (mapcar #'(lambda (u) 
-	      (apply #'make-group-element u)) 
-	  '((1 2 3 4) (3 4 1 2) (4 3 2 1)
-	    (2 1 4 3) (1 3 4 2) (1 4 3 2)
-	    (3 2 4 1) (4 2 1 3) (2 4 3 1)
-	    (4 1 3 2) (2 3 1 4) (3 1 2 4))))
 
 ;; Generate all face colorings (256 of them).
 ;; Red, green, blue, white.
