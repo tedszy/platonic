@@ -42,40 +42,32 @@ that define them."))
 ;; If all are represented by lists of integers (including verticies,
 ;; which are lists of one integer) then we have a uniform interface.
 
-(defclass geometric () ((label-list :accessor geometric.label-list :initarg :label-list)))
+;; ****************
 
-(defun make-geometric (label-list)
-  (make-instance 'geometric :label-list (sort label-list #'<)))
-
-(defmethod print-object ((geo geometric) stream) 
-  (format stream "[~{~a~^ ~}]" (geometric.label-list geo))) 
+;; Actually, making this a class rather than just lists
+;; complicates my life quite a bit.
 
 ;; Compare two vertices/edges/faces.
-(defun geometric-equal-p (g h)
-  (not (set-exclusive-or (geometric.label-list g)
-			 (geometric.label-list h))))
+(defun geometric-equal-p (g h) (not (set-exclusive-or g h)))
 
 ;; Testing
-(defparameter gg1 (make-geometric '(3 2 1)))
-(defparameter gg2 (make-geometric '(2 1 3)))
+(defparameter gg1 '(3 2 1))
+(defparameter gg2 '(2 1 3))
 			
 (defgeneric group-element-apply (g v)
   (:documentation "Transform a vertex/edge/face by applying group element."))
 
 ;; Transform vertex/edge/face.
-(defmethod group-element-apply ((g group-element) (geo geometric))
-  (make-geometric (loop for v in (geometric.label-list geo)
-		     collecting (svref (group-element.permutation g) v))))
+(defmethod group-element-apply ((g group-element) (geo list))
+  (loop for v in geo
+     collecting (svref (group-element.permutation g) v)))
 
 
 ;; ============ Tetrahedron setup ====================
 
-(defparameter *tetrahedron-vertices* 
-  (mapcar #'make-geometric '((1) (2) (3) (4))))
-(defparameter *tetrahedron-edges* 
-  (mapcar #'make-geometric '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4))))
-(defparameter *tetrahedron-faces* 
-  (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4))))
+(defparameter *tetrahedron-vertices* '((1) (2) (3) (4)))
+(defparameter *tetrahedron-edges* '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4)))
+(defparameter *tetrahedron-faces* '((1 2 3) (1 3 4) (1 4 2) (2 3 4)))
 
 ;; Define group of tetrahedral rotational symmetries. Two generators r, s.
 
@@ -170,18 +162,22 @@ that define them."))
 ;; Generate all face colorings (256 of them).
 ;; Red, green, blue, white.
 (defparameter *all-face-configurations*
-  (mapcar #'make-face-configuration
-	  (let ((colors '(r g b w))
-		(result nil))
-	    (loop 
-	       for a in colors 
-	       do (loop 
-		     for b in colors
-		     do (loop for c in colors 
-			   do (loop for d in colors 
-				 do (push (list a b c d) result)))))
-	    result)))
+  (let ((colors '(r g b w))
+	(result nil))
+    (loop 
+       for a in colors 
+       do (loop 
+	     for b in colors
+	     do (loop for c in colors 
+		   do (loop for d in colors 
+			 do (push (make-face-configuration (list a b c d)) 
+				  result)))))
+    result))
 
+
+
+
+;;;; problem in handling ordering of face lists ==============
 
 ;; When do two alists contain the same elements (as sets)?
 (defun alist-equal-p (a1 a2)
@@ -192,45 +188,54 @@ that define them."))
 (defparameter aa2 '(((1 3 4) . d) ((1 2 3) . b) ((2 3 4) . c)))
 (defparameter aa3 '(((1 2 4) . b) ((2 3 4) . c) ((1 3 4) . d)))
 
-
-
-
 ;; When are two face configurations equivalent?
 ;; A simple comparison of alists. If each pair in fc1's alist has 
 ;; equivalent in fc2 then they are equal.
-(defun equivalent-face-configs-p (fc1 fc2)
-  (let ((a1 (mapcar #'(lambda (f) 
-			(cons (geometric.label-list (car f))
-			      (cdr f)))
-		    (configuration.faces fc1)))
-	(a2 (mapcar #'(lambda (f) 
-			(cons (geometric.label-list (car f))
-			      (cdr f)))
-		    (configuration.faces fc2))))
-    (null (set-difference a1 a2 :test #'equalp))))
+(defun face-configuration-equal-p (f1 f2)
+  (let ((a1 (configuration.faces f1))
+	(a2 (configuration.faces f2)))
+    (alist-equal-p a1 a2)))
 
 
 
-;; pop top of config list and put in solution list.
-;; delete-if all equivalent configs under symmetry group.
-;; pop next one
-;; repeat until config list is empty.
 
 
-(defparameter solution nil)
+(defun iterate ()
+  (let ((solution nil)
+	(rotations nil)
+	(current nil))
+    
+    (loop 
+       until (null *all-face-configurations*)
+       do
+	 (setf current (pop *all-face-configurations*))
+	 (push current solution)
+	 (setf rotations (loop for g in tgroup
+			    collecting (group-element-apply g current)))
+	 (setf *all-face-configurations*
+	       (set-difference *all-face-configurations*
+			       rotations
+			       :test #'face-configuration-equal-p)))		      
+    (length (remove-duplicates solution :test #'face-configuration-equal-p))))
+       
 
-(defun solve ()
-  (loop 
-     until (null all-face-configs)
-     do 
-       (push (pop all-face-configs) solution)
-       (loop 
-	  for g in tgroup
-	  do (setf all-face-configs 
-		   (delete-if #'(lambda (u)
-				  (equivalent-face-configs-p (group-element-apply g (car solution))
-							     u))
-			      all-face-configs)))))
+(defun eliminate (n)
+  (let ((current (nth n *all-face-configurations*)))
+    (let ((rotations (loop for g in tgroup collecting (group-element-apply g current))))
+      (setf *all-face-configurations* 
+	    (set-difference *all-face-configurations*
+			    rotations
+			    :test #'face-configuration-equal-p))
+      rotations)))
+
+;;  (length *all-face-configurations*))
+
+
+
+
+
+
+
 
 
 
