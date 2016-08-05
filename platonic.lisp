@@ -174,27 +174,23 @@ that define them."))
 				  result)))))
     result))
 
+;; Is ((1 2 3) . b) equal to ((3 2 1) . b) ? 
+;; Should be yes.
+(defun face-pair-equal-p (fp1 fp2)
+  (and (not (set-exclusive-or (car fp1) (car fp2)))
+       (eq (cdr fp1) (cdr fp2))))
 
-
-
-;;;; problem in handling ordering of face lists ==============
-
-;; When do two alists contain the same elements (as sets)?
-(defun alist-equal-p (a1 a2)
-  (not (set-exclusive-or a1 a2 :test #'equalp)))
+(defun face-pair-data-equal-p (f1 f2)
+  (not (set-exclusive-or f1 f2 :test #'face-pair-equal-p)))
 
 ;; Testing.
 (defparameter aa1 '(((1 2 3) . b) ((2 3 4) . c) ((1 3 4) . d)))
-(defparameter aa2 '(((1 3 4) . d) ((1 2 3) . b) ((2 3 4) . c)))
+(defparameter aa2 '(((3 4 1) . d) ((1 3 2) . b) ((4 2 3) . c)))
 (defparameter aa3 '(((1 2 4) . b) ((2 3 4) . c) ((1 3 4) . d)))
 
-;; When are two face configurations equivalent?
-;; A simple comparison of alists. If each pair in fc1's alist has 
-;; equivalent in fc2 then they are equal.
-(defun face-configuration-equal-p (f1 f2)
-  (let ((a1 (configuration.faces f1))
-	(a2 (configuration.faces f2)))
-    (alist-equal-p a1 a2)))
+
+
+
 
 
 
