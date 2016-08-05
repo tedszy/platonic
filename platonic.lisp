@@ -77,7 +77,7 @@ that define them."))
 (defparameter s  (make-group-element 4 3 2 1)) 
 (defparameter r  (make-group-element 1 3 4 2)) 
 
-(defparameter tetrahedral-group
+(defparameter *tetrahedral-group*
   (list s r 
 	(g* s s) (g* r r) (g* s r) (g* r s)
 	(g* r s r) (g* r r s) (g* s r r)
@@ -86,10 +86,13 @@ that define them."))
 (defparameter tgroup
   (mapcar #'(lambda (u) 
 	      (apply #'make-group-element u)) 
-	  '((1 2 3 4) (3 4 1 2) (4 3 2 1)
-	    (2 1 4 3) (1 3 4 2) (1 4 3 2)
-	    (3 2 4 1) (4 2 1 3) (2 4 3 1)
-	    (4 1 3 2) (2 3 1 4) (3 1 2 4))))
+	  '(;;(1 2 3 4) 
+	    ;; (3 4 1 2) (4 3 2 1)
+	    ;; (2 1 4 3) (1 3 4 2) (1 4 3 2)
+	    ;; (3 2 4 1) (4 2 1 3) (2 4 3 1)
+	    ;; (4 1 3 2) (2 3 1 4) 
+	    (3 1 2 4)
+	    )))
 
 ;; ==================================================
 
@@ -183,72 +186,49 @@ that define them."))
 (defun face-pair-data-equal-p (f1 f2)
   (not (set-exclusive-or f1 f2 :test #'face-pair-equal-p)))
 
+(defun face-configuration-equal-p (fc1 fc2)
+  (face-pair-data-equal-p (configuration.faces fc1)
+			  (configuration.faces fc2)))
+
 ;; Testing.
 (defparameter aa1 '(((1 2 3) . b) ((2 3 4) . c) ((1 3 4) . d)))
 (defparameter aa2 '(((3 4 1) . d) ((1 3 2) . b) ((4 2 3) . c)))
 (defparameter aa3 '(((1 2 4) . b) ((2 3 4) . c) ((1 3 4) . d)))
 
+;; I don't know why we must eliminate symmetrical configurations from
+;; both *all-face-configurations* AND *solutions*. Somehow we are not
+;; catching some of the ones pushed onto *solutions*.
 
+(defparameter *solution* nil)
 
-
-
-
-
-
-
-(defun iterate ()
-  (let ((solution nil)
-	(rotations nil)
-	(current nil))
+(defun tetrahedron-4-colors ()
+  (let ((current nil)
+	(rotations nil))
     
     (loop 
        until (null *all-face-configurations*)
-       do
+       do 
 	 (setf current (pop *all-face-configurations*))
-	 (push current solution)
-	 (setf rotations (loop for g in tgroup
-			    collecting (group-element-apply g current)))
-	 (setf *all-face-configurations*
-	       (set-difference *all-face-configurations*
-			       rotations
-			       :test #'face-configuration-equal-p)))		      
-    (length (remove-duplicates solution :test #'face-configuration-equal-p))))
+	 (setf rotations (loop for g in *tetrahedral-group*
+			      collecting (group-element-apply g current)))
+	 (setf *solution* (set-difference *solution*
+					  rotations
+					  :test #'face-configuration-equal-p))
+	 (setf *all-face-configurations* (set-difference *all-face-configurations*
+							 rotations
+							 :test #'face-configuration-equal-p))
+	 (push current *solution*))
+    
+    
+    (format t "~{~a~%~}" *solution*)
+    (length *solution*)))
+    
        
-
-(defun eliminate (n)
-  (let ((current (nth n *all-face-configurations*)))
-    (let ((rotations (loop for g in tgroup collecting (group-element-apply g current))))
-      (setf *all-face-configurations* 
-	    (set-difference *all-face-configurations*
-			    rotations
-			    :test #'face-configuration-equal-p))
-      rotations)))
-
-;;  (length *all-face-configurations*))
-
-
-
-
-
-
 
 
 
 
 ;; ==================== for testing ===========================
-
-;; something seems to be wrong with equivalence and filtering.
-
- (defparameter to-remove 
-   (loop for g in tgroup
-      collecting (group-element-apply g (car all-face-configs))))
-
-;; should have length 244
-(defparameter foo
-  (set-difference all-face-configs to-remove :test #'equivalent-face-configs-p))
-
-;; (delete-if #'(lambda (u) (equivalent-face-configs-p fc2 u))
-;;		     all-face-configs)
 
 
 
@@ -256,32 +236,6 @@ that define them."))
 				     :edge-data '(w w w r r r) 
 				     :face-data '(r g b w)))
 
-(defparameter fc1 (make-face-config '(r g b w)))  
-(defparameter fc2 (group-element-apply r fc1))
 
 
-#|
 
-;; Ordering for faces. (1 2 5) < (1 3 4). We cannot have
-;; two equal faces in the same solid.
-(defun face< (fa fb)
-  (loop 
-     with ra = (reverse (sort fa #'<))
-     with rb = (reverse (sort fb #'<))
-     with multiplier = 1
-     with resa = 0
-     with resb = 0
-     for a in ra
-     and b in rb
-     do 
-       (incf resa (* a multiplier))
-       (incf resb (* b multiplier))
-       (setf multiplier (* multiplier 10))
-     finally (return (< resa resb))))
- 
-(defun face= (fa fb)
-  (equalp (sort fa #'<)
-	  (sort fb #'<)))
-
-
-|#
