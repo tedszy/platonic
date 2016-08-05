@@ -135,10 +135,10 @@ that define them."))
 			     for f in *tetrahedron-faces*
 			     and fd in face-data
 			     collecting (cons f fd))))
-
-(defparameter cc1 (make-configuration )) ;;:vertex-data '(r g b w)
-				    ;;  :edge-data '(r r r r r r)
-				      ;; :face-data '(b b g g)))
+;; Testing.
+(defparameter cc1 (make-configuration :vertex-data '(r g b w)
+				      :edge-data '(r r r r r r)
+				      :face-data '(b b g g)))
 
 
 ;; Group elment transformation on vertices, edges, faces. 
@@ -156,51 +156,21 @@ that define them."))
 			   for f in (configuration.faces c)
 			   collecting (cons (group-element-apply g (car f))
 					    (cdr f)))))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;; Specialize to just faces.
-(defclass face-config (configuration) ())
-
-(defmethod print-object ((fc face-config) stream)
-  (format stream
-	  "~&(faces ~{~a~^ ~}"
-	  (configuration.faces fc)))
-    
-(defun make-face-config (face-data)
-  (let ((faces (mapcar #'make-geometric '((1 2 3) (1 3 4) (1 4 2) (2 3 4)))))
-    (make-instance 'face-config
-		   :faces (loop 
-			     for f in faces
-			     and fd in face-data
-			     collecting (cons f fd)))))
-
-(defmethod group-element-apply ((g group-element) (fc face-config))
-  (make-instance 'face-config
+;; Convenience function
+(defun make-face-configuration (face-data)
+  (make-instance 'configuration
 		 :faces (loop
-			   for f in (configuration.faces fc)
-			   collecting (cons (group-element-apply g (car f))
-					    (cdr f)))))
+			   for f in *tetrahedron-faces*
+			   and fd in face-data
+			   collecting (cons f fd))))
+
+;; Testing
+(defparameter ffcc1 (make-face-configuration '(r g b w)))
 
 ;; Generate all face colorings (256 of them).
 ;; Red, green, blue, white.
-(defparameter all-face-configs
-  (mapcar #'make-face-config
+(defparameter *all-face-configurations*
+  (mapcar #'make-face-configuration
 	  (let ((colors '(r g b w))
 		(result nil))
 	    (loop 
@@ -211,6 +181,19 @@ that define them."))
 			   do (loop for d in colors 
 				 do (push (list a b c d) result)))))
 	    result)))
+
+
+;; When do two alists contain the same elements (as sets)?
+(defun alist-equal-p (a1 a2)
+  (not (set-exclusive-or a1 a2 :test #'equalp)))
+
+;; Testing.
+(defparameter aa1 '(((1 2 3) . b) ((2 3 4) . c) ((1 3 4) . d)))
+(defparameter aa2 '(((1 3 4) . d) ((1 2 3) . b) ((2 3 4) . c)))
+(defparameter aa3 '(((1 2 4) . b) ((2 3 4) . c) ((1 3 4) . d)))
+
+
+
 
 ;; When are two face configurations equivalent?
 ;; A simple comparison of alists. If each pair in fc1's alist has 
