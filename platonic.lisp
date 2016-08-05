@@ -23,9 +23,6 @@
   (:documentation "compose two group elements by composing the permutations 
 that define them."))
 
-(defgeneric group-element-equalp (g h)
-  (:documentation "T if two group elements are equal."))
-
 ;; (1 2 3 4)         (1 2 3 4)         (1 2 3 4) 
 ;; (4 3 2 1) => g    (2 1 4 3) => h    (3 4 1 2) => g*h
 (defmethod group-element-* ((g group-element) (h group-element))
@@ -39,10 +36,6 @@ that define them."))
 
 ;; Convenience.
 (defmethod g* (&rest elements) (reduce #'group-element-* elements))
-
-(defmethod group-element-equalp (g h)
-  (equalp (group-element.permutation g)
-	  (group-element.permutation h)))
 
 ;; Ordering within faces and edges and so on should not matter.
 ;; Vertex has one label, edge has two, faces have three or more.
@@ -150,6 +143,14 @@ that define them."))
 	(g* r s r) (g* r r s) (g* s r r)
 	(g* r r s r) (g* r s r r)))
 
+(defparameter tgroup
+  (mapcar #'(lambda (u) 
+	      (apply #'make-group-element u)) 
+	  '((1 2 3 4) (3 4 1 2) (4 3 2 1)
+	    (2 1 4 3) (1 3 4 2) (1 4 3 2)
+	    (3 2 4 1) (4 2 1 3) (2 4 3 1)
+	    (4 1 3 2) (2 3 1 4) (3 1 2 4))))
+
 ;; Generate all face colorings (256 of them).
 ;; Red, green, blue, white.
 (defparameter all-face-configs
@@ -166,20 +167,67 @@ that define them."))
 	    result)))
 
 ;; When are two face configurations equivalent?
+;; A simple comparison of alists. If each pair in fc1's alist has 
+;; equivalent in fc2 then they are equal.
 (defun equivalent-face-configs-p (fc1 fc2)
-  
+  (let ((a1 (mapcar #'(lambda (f) 
+			(cons (geometric.label-list (car f))
+			      (cdr f)))
+		    (configuration.faces fc1)))
+	(a2 (mapcar #'(lambda (f) 
+			(cons (geometric.label-list (car f))
+			      (cdr f)))
+		    (configuration.faces fc2))))
+    (null (set-difference a1 a2 :test #'equalp))))
 
-  )
+
+
+;; pop top of config list and put in solution list.
+;; delete-if all equivalent configs under symmetry group.
+;; pop next one
+;; repeat until config list is empty.
+
+
+(defparameter solution nil)
+
+(defun solve ()
+  (loop 
+     until (null all-face-configs)
+     do 
+       (push (pop all-face-configs) solution)
+       (loop 
+	  for g in tgroup
+	  do (setf all-face-configs 
+		   (delete-if #'(lambda (u)
+				  (equivalent-face-configs-p (group-element-apply g (car solution))
+							     u))
+			      all-face-configs)))))
+
 
 
 ;; ==================== for testing ===========================
+
+;; something seems to be wrong with equivalence and filtering.
+
+ (defparameter to-remove 
+   (loop for g in tgroup
+      collecting (group-element-apply g (car all-face-configs))))
+
+;; should have length 244
+(defparameter foo
+  (set-difference all-face-configs to-remove :test #'equivalent-face-configs-p))
+
+;; (delete-if #'(lambda (u) (equivalent-face-configs-p fc2 u))
+;;		     all-face-configs)
+
+
 
 (defparameter c1 (make-configuration :vertex-data '(r r b b) 
 				     :edge-data '(w w w r r r) 
 				     :face-data '(r g b w)))
 
 (defparameter fc1 (make-face-config '(r g b w)))  
-
+(defparameter fc2 (group-element-apply r fc1))
 
 
 #|
