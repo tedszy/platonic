@@ -49,7 +49,7 @@
 ;; is represented as an alist.
 (defun make-tetrahedron-configuration (vef-type data)
   (let ((vertices '((1) (2) (3) (4)))
-	(edges '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4)))
+	(edges '((1 2) (1 3) (1 4) (2 3) (2 4) (3 4)))
 	(faces '((1 2 3) (1 2 4) (1 3 4) (2 3 4))))
     (cons vef-type 
 	  (ecase vef-type
@@ -70,18 +70,6 @@
 				  (cadr c)))
 	      #'<
 	      :key #'(lambda (c) (hash-vef (car c))))))
-    
-(defparameter c1 (make-tetrahedron-configuration 'faces '(a b c d)))
-(defparameter gg (make-group-element '(4 3 2 1)))
-
-
-
-
-;; ----- Tetrahedron data. -----
-
-(defparameter *tetrahedron-vertices* '((1) (2) (3) (4)))
-(defparameter *tetrahedron-edges* '((1 2) (1 3) (1 4) (2 3) (2 4) (3 4)))
-(defparameter *tetrahedron-faces* '((1 2 3) (1 2 4) (1 3 4) (2 3 4)))
 
 ;; Define group of tetrahedral rotational symmetries. 
 ;; Two generators r, s.
@@ -96,12 +84,46 @@
 	  (g* r s r) (g* r r s) (g* s r r)
 	  (g* r r s r) (g* r s r r))))
 
-;; -----------------------------
+;; Find all distinct configurations.
+;; Give it a list of colors. See if it matches
+;; Burnside's formula.
 
+(defun cartesian-product (&rest lists)
+  (if (car lists)
+      (mapcan (lambda (inner)
+                (mapcar (lambda (outer)
+                          (cons outer inner))
+                        (car lists)))
+              (apply #'cartesian-product (cdr lists)))
+      (list nil)))
 
-
-
-
+(defun all-colorings (colors)
+  (let ((color-lists (make-list 4 :initial-element colors)))
+    (mapcar (lambda (c) 
+	      (make-tetrahedron-configuration 'faces c))
+	    (apply #'cartesian color-lists))))
+				  
+(defun find-distinct-face-colorings (colors)
+  (let ((all (all-colorings colors))
+	(result nil))
+    (loop until (null all)
+       with current = nil
+       with rotations = nil
+       do
+	 (setf current (pop all))
+	 (setf rotations (loop for g in *tetrahedral-group*
+			    collecting (transform-configuration g current)))
+	 (setf all (set-difference all rotations :test #'equalp))
+	 (setf result (set-difference result rotations :test #'equalp))
+	 (push current result))
+    result))
+		
+;; c = number of colors.	
+(defun burnside (c)
+  (/ (+ (* 11 (* c c))
+	(* c c c c))
+     12))
+	   
 ;; ---------------------- testing --------------------------- 
 
 (defparameter *passed* 0)
@@ -159,113 +181,4 @@
 
 
 ;; ------------------------------------------------------------
-
-
-
-
-#|
-
-
-;; Group elment transformation on vertices, edges, faces. 
-(defmethod group-element-apply ((g group-element) (c configuration))
-  (make-instance 'configuration
-		 :vertices (loop 
-			      for v in (configuration.vertices c)
-			      collecting (cons (group-element-apply g (car v))
-					       (cdr v)))
-		 :edges (loop
-			   for e in (configuration.edges c)
-			   collecting (cons (group-element-apply g (car e))
-					    (cdr e)))
-		 :faces (loop
-			   for f in (configuration.faces c)
-			   collecting (cons (group-element-apply g (car f))
-					    (cdr f)))))
-;; Convenience function
-(defun make-face-configuration (face-data)
-  (make-instance 'configuration
-		 :faces (loop
-			   for f in *tetrahedron-faces*
-			   and fd in face-data
-			   collecting (cons f fd))))
-
-;; Testing
-(defparameter ffcc1 (make-face-configuration '(r g b w)))
-
-;; Generate all face colorings (256 of them).
-;; Red, green, blue, white.
-(defparameter *all-face-configurations*
-  (let ((colors '(r g b w))
-	(result nil))
-    (loop 
-       for a in colors 
-       do (loop 
-	     for b in colors
-	     do (loop for c in colors 
-		   do (loop for d in colors 
-			 do (push (make-face-configuration (list a b c d)) 
-				  result)))))
-    result))
-
-;; Is ((1 2 3) . b) equal to ((3 2 1) . b) ? 
-;; Should be yes.
-(defun face-pair-equal-p (fp1 fp2)
-  (and (not (set-exclusive-or (car fp1) (car fp2)))
-       (eq (cdr fp1) (cdr fp2))))
-
-(defun face-pair-data-equal-p (f1 f2)
-  (not (set-exclusive-or f1 f2 :test #'face-pair-equal-p)))
-
-(defun face-configuration-equal-p (fc1 fc2)
-  (face-pair-data-equal-p (configuration.faces fc1)
-			  (configuration.faces fc2)))
-
-;; Testing.
-(defparameter aa1 '(((1 2 3) . b) ((2 3 4) . c) ((1 3 4) . d)))
-(defparameter aa2 '(((3 4 1) . d) ((1 3 2) . b) ((4 2 3) . c)))
-(defparameter aa3 '(((1 2 4) . b) ((2 3 4) . c) ((1 3 4) . d)))
-
-;; I don't know why we must eliminate symmetrical configurations from
-;; both *all-face-configurations* AND *solutions*. Somehow we are not
-;; catching some of the ones pushed onto *solutions*.
-
-(defparameter *solution* nil)
-
-(defun tetrahedron-4-colors ()
-  (let ((current nil)
-	(rotations nil))
-    
-    (loop 
-       until (null *all-face-configurations*)
-       do 
-	 (setf current (pop *all-face-configurations*))
-	 (setf rotations (loop for g in *tetrahedral-group*
-			      collecting (group-element-apply g current)))
-	 (setf *solution* (set-difference *solution*
-					  rotations
-					  :test #'face-configuration-equal-p))
-	 (setf *all-face-configurations* (set-difference *all-face-configurations*
-							 rotations
-							 :test #'face-configuration-equal-p))
-	 (push current *solution*))
-    
-    
-    (format t "~{~a~%~}" *solution*)
-    (length *solution*)))
-    
-       
-
-
-
-
-;; ==================== for testing ===========================
-
-
-
-(defparameter c1 (make-configuration :vertex-data '(r r b b) 
-				     :edge-data '(w w w r r r) 
-				     :face-data '(r g b w)))
-
-
-|#
 
