@@ -50,7 +50,7 @@
 (defun make-tetrahedron-configuration (vef-type data)
   (let ((vertices '((1) (2) (3) (4)))
 	(edges '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4)))
-	(faces '((1 2 3) (1 3 4) (1 2 4) (2 3 4))))
+	(faces '((1 2 3) (1 2 4) (1 3 4) (2 3 4))))
     (cons vef-type 
 	  (ecase vef-type
 	    (vertices (loop for v in vertices and d in data
@@ -80,8 +80,8 @@
 ;; ----- Tetrahedron data. -----
 
 (defparameter *tetrahedron-vertices* '((1) (2) (3) (4)))
-(defparameter *tetrahedron-edges* '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4)))
-(defparameter *tetrahedron-faces* '((1 2 3) (1 3 4) (1 2 4) (2 3 4)))
+(defparameter *tetrahedron-edges* '((1 2) (1 3) (1 4) (2 3) (2 4) (3 4)))
+(defparameter *tetrahedron-faces* '((1 2 3) (1 2 4) (1 3 4) (2 3 4)))
 
 ;; Define group of tetrahedral rotational symmetries. 
 ;; Two generators r, s.
@@ -130,14 +130,28 @@
   (test-me = 6532 (hash-vef '(6 2 3 5)))
   (let ((id (make-group-element '(1 2 3 4))))
     (test-me equalp '(1 2 3) (transform-vef id '(1 2 3))))
-  
   )
+
+;; Take advantage of the fact that faces are transformed
+;; just like vertices for a tetrahedron.
+(defun test-configuration ()
+  (let ((c (make-tetrahedron-configuration 'faces '(a b c d)))
+	(g (make-group-element '(4 3 2 1)))
+	(h (make-group-element '(3 1 4 2))))
+ ;;                              D C B A
+    (test-me equalp 
+	     '(faces ((1 2 3) D) ((1 2 4) C) ((1 3 4) B) ((2 3 4) A))
+	     (transform-configuration g c))
+    (test-me equalp
+	     '(faces ((1 2 3) B) ((1 2 4) D) ((1 3 4) A) ((2 3 4) C))
+	     (transform-configuration h c))))
 
 (defun run-tests ()
   (setf *passed* 0)
   (setf *failed* 0)
   (test-group-elements)
   (test-vef)
+  (test-configuration)
   (format t "~&passed: ~a" *passed*)
   (format t "~&failed: ~a" *failed*))
 
