@@ -45,56 +45,44 @@
 (defun transform-vef (g vef)
   (loop for v in vef collecting (svref g v)))
 
+;; Configurations are lists of vertices/edges/faces with extra 
+;; data added, such as color of each face. The configuration
+;; is represented as an alist.
+(defun make-tetrahedron-configuration (vef-type data)
+  (let ((vertices '((1) (2) (3) (4)))
+	(edges '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4)))
+	(faces '((1 2 3) (1 3 4) (1 2 4) (2 3 4))))
+    (cons vef-type 
+	  (ecase vef-type
+	    (vertices (loop for v in vertices and d in data
+			 collecting (list v d)))
+	    (edges (loop for e in edges and d in data
+		      collecting (list e d)))
+	    (faces (loop for f in faces and d in data
+		      collecting (list f d)))))))
 
 
 
-
-
-
-
-
-
-
-
-
-#|
-
-;; ============ Tetrahedron setup ====================
+;; ----- Tetrahedron data. -----
 
 (defparameter *tetrahedron-vertices* '((1) (2) (3) (4)))
 (defparameter *tetrahedron-edges* '((1 2) (1 3) (1 4) (2 3) (3 4) (2 4)))
-(defparameter *tetrahedron-faces* '((1 2 3) (1 3 4) (1 4 2) (2 3 4)))
+(defparameter *tetrahedron-faces* '((1 2 3) (1 3 4) (1 2 4) (2 3 4)))
 
-;; Define group of tetrahedral rotational symmetries. Two generators r, s.
-
+;; Define group of tetrahedral rotational symmetries. 
+;; Two generators r, s.
 ;; Standard vertex-edge-face labelling (see graphic).
 ;; r => 120 degree twist through axis on vertex1 and base 1.
 ;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
-(defparameter s  (make-group-element 4 3 2 1)) 
-(defparameter r  (make-group-element 1 3 4 2)) 
-
 (defparameter *tetrahedral-group*
-  (list s r 
-	(g* s s) (g* r r) (g* s r) (g* r s)
-	(g* r s r) (g* r r s) (g* s r r)
-	(g* r r s r) (g* r s r r)))
+  (let ((s (make-group-element '(4 3 2 1)))
+	(r (make-group-element '(1 3 4 2))))
+    (list s r 
+	  (g* s s) (g* r r) (g* s r) (g* r s)
+	  (g* r s r) (g* r r s) (g* s r r)
+	  (g* r r s r) (g* r s r r))))
 
-(defparameter tgroup
-  (mapcar #'(lambda (u) 
-	      (apply #'make-group-element u)) 
-	  '(;;(1 2 3 4) 
-	    ;; (3 4 1 2) (4 3 2 1)
-	    ;; (2 1 4 3) (1 3 4 2) (1 4 3 2)
-	    ;; (3 2 4 1) (4 2 1 3) (2 4 3 1)
-	    ;; (4 1 3 2) (2 3 1 4) 
-	    (3 1 2 4)
-	    )))
-
-;; ==================================================
-
-|#
-
-
+;; -----------------------------
 
 
 
