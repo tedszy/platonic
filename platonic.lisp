@@ -1,67 +1,63 @@
 (in-package #:platonic)
 
-;; Group elements are represented by permutations of 
-;; length-(n+1) vectors. The 0th component of the vector
-;; us unused for now. This is to make permutations begin
-;; at index 1 like in all textbooks.
+;; Group elements are represented by permutations in the
+;; form of (n+1)-length vectors. The 0th component of the 
+;; vector us unused for now. This is to make permutations 
+;; begin at index 1 like in all textbooks.
 
-(defclass group-element ()
-  ((permutation :accessor group-element.permutation :initarg :permutation)))
-
-(defmethod print-object ((g group-element) stream)
-  (let ((p (group-element.permutation g)))
-    (format stream 
-	    "<~{~a~^ ~}>" 
-	    (loop for i from 1 below (length p)
-		 collecting (svref p i)))))
-
-(defun make-group-element (&rest data)
-  (make-instance 'group-element
-		 :permutation (apply #'vector (cons 0 data))))
-
-(defgeneric group-element-* (g h)
-  (:documentation "compose two group elements by composing the permutations 
-that define them."))
-
+(defun make-group-element (permutation-list)
+  (make-array (1+ (length permutation-list)) 
+	      :initial-contents (cons 0 permutation-list)))
+			   
 ;; (1 2 3 4)         (1 2 3 4)         (1 2 3 4) 
 ;; (4 3 2 1) => g    (2 1 4 3) => h    (3 4 1 2) => g*h
-(defmethod group-element-* ((g group-element) (h group-element))
-  (let ((pg (group-element.permutation g))
-	(ph (group-element.permutation h)))
-    (loop with perm = (make-array (length pg) :initial-element 0)
-	 for i from 1 below (length pg)
-	 do (setf (svref perm i) (svref pg (svref ph i)))
-	 finally (return (make-instance 'group-element
-					:permutation perm)))))
+(defun group-element-multiply (g h)
+  (loop with g*h = (make-array (length g) :initial-element 0)
+       for i from 1 below (length g)
+       do (setf (svref g*h i) (svref g (svref h i)))
+       finally (return g*h)))
 
 ;; Convenience.
-(defmethod g* (&rest elements) (reduce #'group-element-* elements))
+(defun g* (&rest elements)
+  (reduce #'group-element-multiply elements))
 
-;; Ordering within faces and edges and so on should not matter.
-;; Vertex has one label, edge has two, faces have three or more.
-;; If all are represented by lists of integers (including verticies,
-;; which are lists of one integer) then we have a uniform interface.
+;; Geometric objects: vertices, edges and faces 
+;; are just sets (i.e. unordered) represented as lists. 
+;;
+;; '(1) => vertex
+;; '(1 2) => edge
+;; '(1 2 3) => face.
 
-;; ****************
+;; Hashing function to put vertices, faces, edges into standard order.
+;; (a b c d e)
+;;  0 1 2 3 4
+;;
+;; => a*1 + b*10 + c*10^2 + d*10^3 + e*10^4.
+;;
+;; vef = vertext/edge/face
+(defun hash-vef (vef)
+  (loop for u in (sort vef #'<)
+       with multiplier = 1
+       summing (* u multiplier)
+       do (setf multiplier (* 10 multiplier))))
+       
+;; Transform geometric vef by applying group-element.
+(defun transform-vef (g vef)
+  (loop for v in vef collecting (svref g v)))
 
-;; Actually, making this a class rather than just lists
-;; complicates my life quite a bit.
 
-;; Compare two vertices/edges/faces.
-(defun geometric-equal-p (g h) (not (set-exclusive-or g h)))
 
-;; Testing
-(defparameter gg1 '(3 2 1))
-(defparameter gg2 '(2 1 3))
-			
-(defgeneric group-element-apply (g v)
-  (:documentation "Transform a vertex/edge/face by applying group element."))
 
-;; Transform vertex/edge/face.
-(defmethod group-element-apply ((g group-element) (geo list))
-  (loop for v in geo
-     collecting (svref (group-element.permutation g) v)))
 
+
+
+
+
+
+
+
+
+#|
 
 ;; ============ Tetrahedron setup ====================
 
@@ -95,6 +91,64 @@ that define them."))
 	    )))
 
 ;; ==================================================
+
+|#
+
+
+
+
+
+
+
+;; ---------------------- testing --------------------------- 
+
+(defparameter *passed* 0)
+(defparameter *failed* 0)
+
+(defmacro test-me (compare expected (fn &rest body))
+  `(if (funcall #',compare ,expected (,fn ,@body))
+       (progn (incf *passed*) 
+	      (format t "ok: ~a~%" ',fn))
+       (progn (incf *failed*)
+	      (format t "not ok: ~a got=~a, expected=~a~%"
+		      ',fn
+		      (,fn ,@body)
+		      ,expected))))
+
+(defun test-group-elements ()
+  (test-me equalp #(0 1 2 3 4) (make-group-element '(1 2 3 4)))
+  (let ((s (make-group-element '(4 3 2 1)))
+	(r (make-group-element '(1 3 4 2))))
+    (test-me equalp #(0 1 2 3 4) (g* s s))
+    (test-me equalp #(0 4 2 1 3) (g* s r))
+    (test-me equalp #(0 2 4 3 1) (g* r s)))
+  )
+
+(defun test-vef ()
+  (test-me = 6532 (hash-vef '(6 2 3 5)))
+  (let ((id (make-group-element '(1 2 3 4))))
+    (test-me equalp '(1 2 3) (transform-vef id '(1 2 3))))
+  
+  )
+
+(defun run-tests ()
+  (setf *passed* 0)
+  (setf *failed* 0)
+  (test-group-elements)
+  (test-vef)
+  (format t "~&passed: ~a" *passed*)
+  (format t "~&failed: ~a" *failed*))
+
+(run-tests)
+
+
+;; ------------------------------------------------------------
+
+
+
+
+#|
+
 
 ;; Slots consist of alists.
 (defclass configuration ()
@@ -237,5 +291,5 @@ that define them."))
 				     :face-data '(r g b w)))
 
 
-
+|#
 
