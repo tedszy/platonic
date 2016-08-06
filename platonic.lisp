@@ -23,6 +23,7 @@
 
 ;; Geometric objects: vertices, edges and faces 
 ;; are just sets (i.e. unordered) represented as lists. 
+;; We can call these vefs for short (vertex/edge/face).
 ;;
 ;; '(1) => vertex
 ;; '(1 2) => edge
@@ -33,8 +34,6 @@
 ;;  0 1 2 3 4
 ;;
 ;; => a*1 + b*10 + c*10^2 + d*10^3 + e*10^4.
-;;
-;; vef = vertext/edge/face
 (defun hash-vef (vef)
   (loop for u in (sort vef #'<)
        with multiplier = 1
@@ -60,6 +59,21 @@
 		      collecting (list e d)))
 	    (faces (loop for f in faces and d in data
 		      collecting (list f d)))))))
+
+;; Transforms a configuration and then brings it 
+;; into a standard sorted form. Each vef is sorted,
+;; and the entire configuration list is sorted.
+(defun transform-configuration (g config)
+  (cons (car config)
+	(sort (loop for c in (cdr config)
+		 collecting (list (sort (transform-vef g (car c)) #'<)
+				  (cadr c)))
+	      #'<
+	      :key #'(lambda (c) (hash-vef (car c))))))
+    
+(defparameter c1 (make-tetrahedron-configuration 'faces '(a b c d)))
+(defparameter gg (make-group-element '(4 3 2 1)))
+
 
 
 
@@ -136,46 +150,6 @@
 
 
 #|
-
-
-;; Slots consist of alists.
-(defclass configuration ()
-  ((vertices :accessor configuration.vertices :initarg :vertices :initform nil)
-   (edges :accessor configuration.edges :initarg :edges :initform nil)
-   (faces :accessor configuration.faces :initarg :faces :initform nil)))
-
-;; Checks if slot is nil, ignores it if so.
-(defmethod print-object ((c configuration) stream)
-  (with-slots (vertices edges faces)
-      c
-    (when (not (null vertices))
-      (format stream "~&(vertices ~{~a~^ ~}" vertices))
-    (when (not (null edges))
-      (format stream "~&(edges ~{~a~^ ~}" edges))
-    (when (not (null faces))
-      (format stream "~&(faces ~{~a~^ ~}" faces))
-    (when (and (null vertices) (null edges) (null faces))
-      (format stream "~&(configuration nil)"))))
-
-;; Data lists.
-(defun make-configuration (&key (vertex-data nil) (edge-data nil) (face-data nil))
-    (make-instance 'configuration
-		   :vertices (loop 
-				for v in *tetrahedron-vertices*
-				and vd in vertex-data
-				collecting (cons v vd))
-		   :edges (loop 
-			     for e in *tetrahedron-edges*
-			     and ed in edge-data
-			     collecting (cons e ed))
-		   :faces (loop 
-			     for f in *tetrahedron-faces*
-			     and fd in face-data
-			     collecting (cons f fd))))
-;; Testing.
-(defparameter cc1 (make-configuration :vertex-data '(r g b w)
-				      :edge-data '(r r r r r r)
-				      :face-data '(b b g g)))
 
 
 ;; Group elment transformation on vertices, edges, faces. 
