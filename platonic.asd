@@ -5,8 +5,9 @@
     :serial t
     ;; :depends-on ()
     :components ((:file "package")
-		 (:file "testme")
+		 (:file "platonic")
 		 (:file "tetrahedron")
 		 (:file "cube")
-		 (:file "platonic")))
+		 (:file "testme") 
+		 ))
 

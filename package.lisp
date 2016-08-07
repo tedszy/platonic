@@ -1,6 +1,6 @@
 (defpackage #:platonic
   (:use #:cl
 	)
-  ;;(export #:nothing-yet)
-
-  )
+  (:export #:run-tests
+	  
+  ))
