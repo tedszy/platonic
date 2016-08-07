@@ -77,7 +77,8 @@
   (mapcar #'make-group-element
 	  (list '(1 2 3 4) ;; Identity.
 		;; Axes rough vertex and center of opposite face.
-		;; One and two turns around axis.
+		;; There are 4 such axes.
+		;; One and two turns around axis. Total of 12 elements.
 		'(1 3 4 2) 
 		'(1 4 2 3)
 		'(4 2 1 3)
@@ -87,20 +88,38 @@
 		'(2 3 1 4)
 		'(3 1 2 4)
 		;; Axes through midpoints of corresponding opposite edges.
+		;; There are three such axes.
 		;; One turn.
 		'(4 3 2 1)
 		'(2 1 4 3)
 		'(3 4 1 2)
 		)))
-	   
-
 
 ;; Rotational symmetries of the cube.
 
 (defparameter *cube-group*
   (mapcar #'make-group-element
-	  (list nil)))
+	  (list '(1 2 3 4 5 6 7 8) ;; Identity.
 
+		;; Axes through centers of opposite faces. 
+		;; There are 3 of them. One, two and three turns each.
+		;; Total of 9 elements.
+
+
+
+		;; Axes through opposite diagonal points.
+		;; There are 4 of them. One and two turns each.
+		;; Total of 8 elements.
+
+
+
+		;; Axes through midpoints of diagonally opposing edges.
+		;; There are 6 of them. One turn each.
+		;; Total of 6 elements.
+		
+
+
+		)))
 
 
 
@@ -135,13 +154,14 @@
 	 (push current result))
     result))
 		
+;; Burnside's formula for tetrahedron.
 ;; c = number of colors.	
 (defun burnside (c)
   (/ (+ (* 11 (* c c))
 	(* c c c c))
      12))
 	   
-;; ---------------------- testing --------------------------- 
+;; ---------------------- Tests. --------------------------- 
 
 (defparameter *passed* 0)
 (defparameter *failed* 0)
@@ -203,5 +223,4 @@
 (run-tests)
 
 
-;; ------------------------------------------------------------
 
