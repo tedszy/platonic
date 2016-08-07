@@ -104,7 +104,17 @@
 		;; Axes through centers of opposite faces. 
 		;; There are 3 of them. One, two and three turns each.
 		;; Total of 9 elements.
+		'(2 3 4 1 6 7 8 5) ;; (1234)--(5678)
+		'(3 4 1 2 7 8 5 6)
+		'(4 1 2 3 8 5 6 7)
 
+                '(4 3 7 8 1 2 6 5) ;; (1458)--(2673)
+		'(3 7 8 4 2 6 5 1)
+		'(7 8 4 3 6 5 1 2)
+
+		'(5 1 4 8 6 2 3 7) ;; (1567)--(3478)
+		'(1 4 8 5 2 3 7 6)
+		'(4 8 5 1 3 7 6 2)
 
 
 		;; Axes through opposite diagonal points.
@@ -122,10 +132,7 @@
 		)))
 
 
-
 ;; Find all distinct configurations.
-;; Give it a list of colors. See if it matches
-;; Burnside's formula.
 
 (defun cartesian-product (&rest lists)
   (if (car lists)
