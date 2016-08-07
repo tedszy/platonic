@@ -71,18 +71,38 @@
 	      #'<
 	      :key #'(lambda (c) (hash-vef (car c))))))
 
-;; Define group of tetrahedral rotational symmetries. 
-;; Two generators r, s.
-;; Standard vertex-edge-face labelling (see graphic).
-;; r => 120 degree twist through axis on vertex1 and base 1.
-;; s => 180 degree twist through axis on midpoints of edge 14 and 23.
+;; Rotational symmetries of the tetrahedron.
+
 (defparameter *tetrahedral-group*
-  (let ((s (make-group-element '(4 3 2 1)))
-	(r (make-group-element '(1 3 4 2))))
-    (list s r 
-	  (g* s s) (g* r r) (g* s r) (g* r s)
-	  (g* r s r) (g* r r s) (g* s r r)
-	  (g* r r s r) (g* r s r r))))
+  (mapcar #'make-group-element
+	  (list '(1 2 3 4) ;; Identity.
+		;; Axes rough vertex and center of opposite face.
+		;; One and two turns around axis.
+		'(1 3 4 2) 
+		'(1 4 2 3)
+		'(4 2 1 3)
+		'(3 2 4 1)
+		'(4 1 3 2)
+		'(2 4 3 1)
+		'(2 3 1 4)
+		'(3 1 2 4)
+		;; Axes through midpoints of corresponding opposite edges.
+		;; One turn.
+		'(4 3 2 1)
+		'(2 1 4 3)
+		'(3 4 1 2)
+		)))
+	   
+
+
+;; Rotational symmetries of the cube.
+
+(defparameter *cube-group*
+  (mapcar #'make-group-element
+	  (list nil)))
+
+
+
 
 ;; Find all distinct configurations.
 ;; Give it a list of colors. See if it matches
@@ -99,7 +119,7 @@
 (defun all-colorings (colors)
   (let ((color-lists (make-list 4 :initial-element colors)))
     (mapcar #'(lambda (c) (make-tetrahedron-configuration 'faces c))
-	    (apply #'cartesian color-lists))))
+	    (apply #'cartesian-product color-lists))))
 				  
 (defun find-distinct-face-colorings (colors)
   (let ((all (all-colorings colors))
@@ -112,7 +132,6 @@
 	 (setf rotations (loop for g in *tetrahedral-group*
 			    collecting (transform-configuration g current)))
 	 (setf all (set-difference all rotations :test #'equalp))
-	 (setf result (set-difference result rotations :test #'equalp))
 	 (push current result))
     result))
 		
@@ -158,7 +177,6 @@
   (let ((c (make-tetrahedron-configuration 'faces '(a b c d)))
 	(g (make-group-element '(4 3 2 1)))
 	(h (make-group-element '(3 1 4 2))))
- ;;                              D C B A
     (test-me equalp 
 	     '(faces ((1 2 3) D) ((1 2 4) C) ((1 3 4) B) ((2 3 4) A))
 	     (transform-configuration g c))
