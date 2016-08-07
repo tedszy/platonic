@@ -116,13 +116,13 @@
               (apply #'cartesian-product (cdr lists)))
       (list nil)))
 
-(defun all-colorings (colors)
+(defun all-tetrahedron-colorings (colors)
   (let ((color-lists (make-list 4 :initial-element colors)))
     (mapcar #'(lambda (c) (make-tetrahedron-configuration 'faces c))
 	    (apply #'cartesian-product color-lists))))
 				  
-(defun find-distinct-face-colorings (colors)
-  (let ((all (all-colorings colors))
+(defun distinct-tetrahedron-colorings (colors)
+  (let ((all (all-tetrahedron-colorings colors))
 	(result nil))
     (loop until (null all)
        with current = nil
@@ -185,10 +185,10 @@
 	     (transform-configuration h c))))
 
 (defun test-burnside ()
-  (test-me = 5 (length (find-distinct-face-colorings '(r g))))
-  (test-me = 15 (length (find-distinct-face-colorings '(r g b))))
-  (test-me = 36 (length (find-distinct-face-colorings '(r g b y))))
-  (test-me = 75 (length (find-distinct-face-colorings '(r g b y k)))))
+  (test-me = 5 (length (distinct-tetrahedron-colorings '(r g))))
+  (test-me = 15 (length (distinct-tetrahedron-colorings '(r g b))))
+  (test-me = 36 (length (distinct-tetrahedron-colorings '(r g b y))))
+  (test-me = 75 (length (distinct-tetrahedron-colorings '(r g b y k)))))
 
 (defun run-tests ()
   (setf *passed* 0)
