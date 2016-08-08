@@ -94,6 +94,7 @@
   (test-vef)
   (test-configuration)
   (test-against-burnside)
+  (format t "ok: ~a~%" '(travel... without moving))
   (format t "~&passed: ~a" *passed*)
   (format t "~&failed: ~a" *failed*))
 

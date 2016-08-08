@@ -76,18 +76,3 @@
 
 
 
-
-
-(defun checkc ()
-  (let ((res nil))
-    (loop for g in *cube-group*
-       do (loop for h in *cube-group*
-	     do 
-	       (push (g* h g) res)
-	       (push (g* g h g) res)
-	       (push (g* h g h) res)
-	       (push (g* h h g) res)
-	       (push (g* g g g h) res)))
-    (values (length res)
-	    (length (remove-duplicates res :test #'equalp)))))
-
