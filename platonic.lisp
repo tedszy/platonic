@@ -123,6 +123,3 @@
               (apply #'cartesian-product (cdr lists)))
       (list nil)))
 
-(defparameter g (nth 4 *cube-group*))
-(defparameter foo (nth 10 (all-cube-colorings '(r g))))
-(defparameter zoo (transform-configuration g foo))

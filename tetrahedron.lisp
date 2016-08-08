@@ -51,8 +51,9 @@
        with rotations = nil
        do
 	 (setf current (pop all))
-	 (setf rotations (loop for g in *tetrahedron-group*
-			    collecting (transform-configuration g current)))
+	 (setf rotations 
+	       (loop for g in *tetrahedron-group*
+		  collecting (transform-configuration g current)))
 	 (setf all (set-difference all rotations :test #'equalp))
 	 (push current result))
     result))

@@ -41,8 +41,10 @@
 
 (defun make-cube-configuration (vef-type data)
   (let ((vertices '((1) (2) (3) (4) (5) (6) (7) (8)))
-	(edges '((1 2) (1 4) (1 5) (2 3) (2 6) (3 4) (3 7) (4 8) (5 6) (5 8) (6 7) (7 8)))
-	(faces '((1 2 3 4) (1 2 5 6) (1 4 5 8) (2 3 6 7) (3 4 7 8) (5 6 7 8))))
+	(edges '((1 2) (1 4) (1 5) (2 3) (2 6) (3 4) 
+		 (3 7) (4 8) (5 6) (5 8) (6 7) (7 8)))
+	(faces '((1 2 3 4) (1 2 5 6) (1 4 5 8) 
+		 (2 3 6 7) (3 4 7 8) (5 6 7 8))))
     (cons vef-type 
 	  (ecase vef-type
 	    (vertices (loop for v in vertices and d in data
@@ -65,8 +67,9 @@
        with rotations = nil
        do
 	 (setf current (pop all))
-	 (setf rotations (loop for g in *cube-group*
-			    collecting (transform-configuration g current)))
+	 (setf rotations 
+	       (loop for g in *cube-group*
+		  collecting (transform-configuration g current)))
 	 (setf all (set-difference all rotations :test #'equalp))
 	 (push current result))
     result))
