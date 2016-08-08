@@ -1,11 +1,19 @@
 (in-package #:platonic)
 		
-;; Burnside's formula for tetrahedron.
+;; Burnside's formulas for tetrahedron and cube.
 ;; c = number of colors.	
-(defun burnside (c)
+
+(defun burnside-tetrahedron (c)
   (/ (+ (* 11 (* c c))
 	(* c c c c))
      12))
+
+(defun burnside-cube (c)
+  (* (/ 24)
+     (+ (* c c c c c c)
+	(* 3 c c c c)
+	(* 12 c c c)
+	(* 8 c c))))
 
 (defparameter *passed* 0)
 (defparameter *failed* 0)
@@ -56,11 +64,19 @@
 	     '(faces ((1 2 3) B) ((1 2 4) D) ((1 3 4) A) ((2 3 4) C))
 	     (transform-configuration h c))))
 
-(defun test-burnside ()
-  (test-me = 5 (length (distinct-tetrahedron-colorings '(r g))))
-  (test-me = 15 (length (distinct-tetrahedron-colorings '(r g b))))
-  (test-me = 36 (length (distinct-tetrahedron-colorings '(r g b y))))
-  (test-me = 75 (length (distinct-tetrahedron-colorings '(r g b y k)))))
+(defun test-against-burnside ()
+  (test-me = 
+	   (burnside-tetrahedron 2) 
+	   (length (distinct-tetrahedron-colorings '(r g))))
+  (test-me = 
+	   (burnside-tetrahedron 3) 
+	   (length (distinct-tetrahedron-colorings '(r g b))))
+  (test-me = 
+	   (burnside-tetrahedron 4)
+	   (length (distinct-tetrahedron-colorings '(r g b y))))
+  (test-me = 
+	   (burnside-tetrahedron 5)
+	   (length (distinct-tetrahedron-colorings '(r g b y k)))))
 
 (defun run-tests ()
   (setf *passed* 0)
@@ -70,7 +86,7 @@
   (test-cube-group)
   (test-vef)
   (test-configuration)
-  (test-burnside)
+  (test-against-burnside)
   (format t "~&passed: ~a" *passed*)
   (format t "~&failed: ~a" *failed*))
 
