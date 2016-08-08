@@ -76,7 +76,14 @@
 	   (length (distinct-tetrahedron-colorings '(r g b y))))
   (test-me = 
 	   (burnside-tetrahedron 5)
-	   (length (distinct-tetrahedron-colorings '(r g b y k)))))
+	   (length (distinct-tetrahedron-colorings '(r g b y k))))
+
+  (test-me = 
+	   (burnside-cube 2) 
+	   (length (distinct-cube-colorings '(r g))))
+  (test-me = 
+	   (burnside-cube 3) 
+	   (length (distinct-cube-colorings '(r g b)))))
 
 (defun run-tests ()
   (setf *passed* 0)
