@@ -89,7 +89,7 @@
 ;; (a b c d e)
 ;;  0 1 2 3 4
 ;;
-;; => a*1 + b*10 + c*10^2 + d*10^3 + e*10^4.
+;; => a*10^4 + b*10^3 + c*10^2 + d*10^1 + e*1.
 (defun hash-vef (vef)
   (loop for u in (sort vef #'<)
        with multiplier = (expt 10 (1- (length vef)))
