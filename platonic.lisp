@@ -38,16 +38,44 @@
 				    (equalp (g* id g) g))))
      collect id))
 
-#|
+;; Assumes unique identity. Returns g with a list of inverses.
+;; We should have only one element in that list of inverses.
 (defun get-inverses (group)
   (let ((id (car (get-identity group))))
-  (loop 
-     for g in group
-     collecting (list g (loop 
-			   for h in group
-			   when
-|#
+    (loop 
+       for g in group
+       collecting (list g (loop 
+			     for inv in group
+			     when (and (equalp (g* inv g) id)
+				       (equalp (g* g inv) id))
+			     collect inv)))))
 
+;; Closure table. Straight-forward multiplication 
+;; table as list of lists. 
+(defun get-closure-table (group)
+  (loop for g in group
+     collecting (loop for h in group collecting (g* g h))))
+
+;; There is only one identity.
+(defun has-identity-property-p (group)
+  (= 1 (length (get-identity group))))
+
+;; Each element has exactly one inverse.
+(defun has-inverse-property-p (group)
+  (let ((inverse-table (get-inverses group)))
+    (loop for g in group
+       when (not (= 1 (length (cadr (assoc g inverse-table :test #'equalp)))))
+       do (return nil)
+       finally (return t))))
+
+;; Every entry in the closure table is a member of group.
+(defun has-closure-property-p (group)
+  (loop named outer for row in (get-closure-table group)
+     do (loop for e in row
+	   if (not (member e group :test #'equalp))
+	   do (return-from outer nil))
+     finally (return-from outer t)))
+	     
 ;; Geometric objects: vertices, edges and faces 
 ;; are just sets (i.e. unordered) represented as lists. 
 ;; We can call these vefs for short (vertex/edge/face).
