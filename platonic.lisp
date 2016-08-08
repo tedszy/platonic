@@ -21,6 +21,33 @@
 (defun g* (&rest elements)
   (reduce #'group-element-multiply elements))
 
+;; Groups have inverse, closure and identity properties.
+;; A group is represented by a list of group-elements.
+
+;; Identity has the property that id*g = g and g*id = g
+;; for all g in group. We return a list containing identity.
+;; Really there should only be one, but it's good to
+;; verify this. 
+;; loop => thereis, always
+(defun get-identity (group)
+  (loop for id in group
+     when (every #'(lambda (u)
+		     (eql u t))
+		 (loop for g in group
+		    collecting (and (equalp (g* g id) g)
+				    (equalp (g* id g) g))))
+     collect id))
+
+#|
+(defun get-inverses (group)
+  (let ((id (car (get-identity group))))
+  (loop 
+     for g in group
+     collecting (list g (loop 
+			   for h in group
+			   when
+|#
+
 ;; Geometric objects: vertices, edges and faces 
 ;; are just sets (i.e. unordered) represented as lists. 
 ;; We can call these vefs for short (vertex/edge/face).
