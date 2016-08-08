@@ -92,9 +92,9 @@
 ;; => a*1 + b*10 + c*10^2 + d*10^3 + e*10^4.
 (defun hash-vef (vef)
   (loop for u in (sort vef #'<)
-       with multiplier = 1
+       with multiplier = (expt 10 (1- (length vef)))
        summing (* u multiplier)
-       do (setf multiplier (* 10 multiplier))))
+       do (setf multiplier (/ multiplier 10))))
        
 ;; Transform geometric vef by applying group-element.
 (defun transform-vef (g vef)
@@ -122,3 +122,7 @@
                         (car lists)))
               (apply #'cartesian-product (cdr lists)))
       (list nil)))
+
+(defparameter g (nth 4 *cube-group*))
+(defparameter foo (nth 10 (all-cube-colorings '(r g))))
+(defparameter zoo (transform-configuration g foo))

@@ -47,7 +47,7 @@
   (test-me eq t (has-closure-property-p *cube-group*)))
 
 (defun test-vef ()
-  (test-me = 6532 (hash-vef '(6 2 3 5)))
+  (test-me = 2356 (hash-vef '(6 2 3 5)))
   (let ((id (make-group-element '(1 2 3 4))))
     (test-me equalp '(1 2 3) (transform-vef id '(1 2 3)))))
 
