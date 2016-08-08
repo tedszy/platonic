@@ -10,6 +10,7 @@
 	   #:has-closure-property-p
 	   #:transform-vef
 	   #:transform-configuration
+	   #:faces
 	   #:make-tetrahedron-configuration
 	   #:distinct-tetrahedron-colorings
 	   #:make-cube-configuration

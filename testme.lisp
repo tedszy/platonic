@@ -98,4 +98,3 @@
   (format t "~&passed: ~a" *passed*)
   (format t "~&failed: ~a" *failed*))
 
-(run-tests)
