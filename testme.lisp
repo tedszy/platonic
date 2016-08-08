@@ -26,14 +26,22 @@
 	(r (make-group-element '(1 3 4 2))))
     (test-me equalp #(0 1 2 3 4) (g* s s))
     (test-me equalp #(0 4 2 1 3) (g* s r))
-    (test-me equalp #(0 2 4 3 1) (g* r s)))
-  )
+    (test-me equalp #(0 2 4 3 1) (g* r s))))
+
+(defun test-tetrahedron-group ()
+  (test-me eq t (has-identity-property-p *tetrahedron-group*))
+  (test-me eq t (has-inverse-property-p *tetrahedron-group*))
+  (test-me eq t (has-closure-property-p *tetrahedron-group*)))
+
+(defun test-cube-group ()
+  (test-me eq t (has-identity-property-p *cube-group*))
+  (test-me eq t (has-inverse-property-p *cube-group*))
+  (test-me eq t (has-closure-property-p *cube-group*)))
 
 (defun test-vef ()
   (test-me = 6532 (hash-vef '(6 2 3 5)))
   (let ((id (make-group-element '(1 2 3 4))))
-    (test-me equalp '(1 2 3) (transform-vef id '(1 2 3))))
-  )
+    (test-me equalp '(1 2 3) (transform-vef id '(1 2 3)))))
 
 ;; Take advantage of the fact that faces are transformed
 ;; just like vertices for a tetrahedron.
@@ -58,6 +66,8 @@
   (setf *passed* 0)
   (setf *failed* 0)
   (test-group-elements)
+  (test-tetrahedron-group)
+  (test-cube-group)
   (test-vef)
   (test-configuration)
   (test-burnside)

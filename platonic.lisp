@@ -26,8 +26,7 @@
 
 ;; Identity has the property that id*g = g and g*id = g
 ;; for all g in group. We return a list containing identity.
-;; Really there should only be one, but it's good to
-;; verify this. 
+;; Really there should only be one, but it's good to verify this. 
 ;; loop => thereis, always
 (defun get-identity (group)
   (loop for id in group
@@ -64,7 +63,9 @@
 (defun has-inverse-property-p (group)
   (let ((inverse-table (get-inverses group)))
     (loop for g in group
-       when (not (= 1 (length (cadr (assoc g inverse-table :test #'equalp)))))
+       when (not (= 1 (length (cadr (assoc g 
+					   inverse-table 
+					   :test #'equalp)))))
        do (return nil)
        finally (return t))))
 
