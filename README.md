@@ -35,8 +35,43 @@ The SBCL prompt shows that we are in the platonic package.
 
 
 ## Groups
+Group elements are represented by length n+1 permutation vectors. These vectors begin at index 1. The 0th index is unused. This is to conform with the convention used in all textbooks: a typical permutation is ```(1 3 2 4)``` not ```(0 2 1 3)```. We can create group elements and compose them with group multiplication ```g*```. For example,
 
+```
+PLATONIC> (setq g1 (make-group-element '(1 4 2 3)))
+#(0 1 4 2 3)
+PLATONIC> (setq g2 (make-group-element '(4 2 3 1)))
+#(0 4 2 3 1)
+PLATONIC> (setq g3 (make-group-element '(2 3 1 4)))
+#(0 2 3 1 4)
+PLATONIC> (g* g1 g2 g3)
+#(0 4 2 3 1)
+```
 
+Geometrical entites like verticies, edges and faces are handled with a uniform interface: they are all simply lists. A vertex is a list of one label, an edge has two, and a face has three or more. Group element can be appled to vertices, edges or faces (vefs), e.g.,
+
+```
+PLATONIC> (transform-vef g1 '(1 3 4))
+(1 2 3)
+```
+
+How do we know if a list of permutation vectors actually forms a group? We can test the group properties: unique inverses, unique identity and closed multiplication table. Let's remove the 7th element from the tetrahedron group and watch it fail the group tests.
+
+```
+PLATONIC> (setq am-i-a-group (loop for g in *tetrahedron-group*
+                                   for i from 1
+				                   unless (= i 7) collect g))
+(#(0 1 2 3 4) #(0 1 3 4 2) #(0 1 4 2 3) #(0 4 2 1 3) #(0 3 2 4 1) #(0 4 1 3 2)
+ #(0 2 3 1 4) #(0 3 1 2 4) #(0 4 3 2 1) #(0 2 1 4 3) #(0 3 4 1 2))
+PLATONIC> (has-identity-property-p am-i-a-group)
+T
+PLATONIC> (has-closure-property-p am-i-a-group)
+NIL
+PLATONIC> (has-inverse-property-p am-i-a-group)
+NIL
+```
+
+It fails two of the tests.
 
 
 ## Tetrahedron
