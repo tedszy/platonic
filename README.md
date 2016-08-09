@@ -75,62 +75,45 @@ It fails two of the tests.
 
 
 ## Tetrahedron
-Rotational symmetries are represented by permutation vectors that act on vertices, edges or faces. The rotation group for the tetrahedron contains 12 elements. Let's take two and compose them.
+The rotation group for the tetrahedron contains 12 elements. A face configuration is a list of faces and their colors. Create a face configuration and transform it by applying group elements:
 
 ```
-PLATONIC> (setq a (nth 4 *tetrahedron-group*))
-#(0 3 2 4 1)
-CL-USER> (setq b (nth 7 platonic:*tetrahedron-group*))
-#(0 2 3 1 4)
-CL-USER> (platonic:g* a b)
-#(0 2 4 3 1)
+PLATONIC> (setq tc (make-tetrahedron-configuration 'faces '(r g b y)))
+(FACES ((1 2 3) R) ((1 2 4) G) ((1 3 4) B) ((2 3 4) Y))
+PLATONIC> (transform-configuration g1 tc)
+(FACES ((1 2 3) B) ((1 2 4) R) ((1 3 4) G) ((2 3 4) Y))
+PLATONIC> (transform-configuration (g* g1 g2 g3) tc)
+(FACES ((1 2 3) Y) ((1 2 4) G) ((1 3 4) B) ((2 3 4) R))
 ```
 
-Now create a face coloring configuration and transform it with group elements.
+Compute all distinct colorings with three colors.
 
 ```
-CL-USER> (setq tc 
-	           (platonic:make-tetrahedron-configuration 'platonic:faces 
-			                                            '(r g b y)))
-(PLATONIC:FACES ((1 2 3) R) ((1 2 4) G) ((1 3 4) B) ((2 3 4) Y))
-```
-
-Transform it.
-
-```
-CL-USER> (platonic:transform-configuration (platonic:g* a b) tc)
-(PLATONIC:FACES ((1 2 3) B) ((1 2 4) G) ((1 3 4) Y) ((2 3 4) R))
-```
-
-And now compute all distinct colorings with three colors.
-
-```
-CL-USER> (platonic:distinct-tetrahedron-colorings '(r g b))
-((PLATONIC:FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) G) ((2 3 4) G))
- (PLATONIC:FACES ((1 2 3) R) ((1 2 4) G) ((1 3 4) G) ((2 3 4) B))
- (PLATONIC:FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) G) ((2 3 4) R))
- (PLATONIC:FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) G) ((2 3 4) B))
- (PLATONIC:FACES ((1 2 3) B) ((1 2 4) B) ((1 3 4) R) ((2 3 4) R))
- (PLATONIC:FACES ((1 2 3) R) ((1 2 4) G) ((1 3 4) B) ((2 3 4) B))
- (PLATONIC:FACES ((1 2 3) B) ((1 2 4) G) ((1 3 4) R) ((2 3 4) R))
- (PLATONIC:FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) B) ((2 3 4) B))
- (PLATONIC:FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) R) ((2 3 4) R))
- (PLATONIC:FACES ((1 2 3) R) ((1 2 4) B) ((1 3 4) B) ((2 3 4) B))
- (PLATONIC:FACES ((1 2 3) B) ((1 2 4) R) ((1 3 4) R) ((2 3 4) R))
- (PLATONIC:FACES ((1 2 3) G) ((1 2 4) B) ((1 3 4) B) ((2 3 4) B))
- (PLATONIC:FACES ((1 2 3) G) ((1 2 4) R) ((1 3 4) R) ((2 3 4) R))
- (PLATONIC:FACES ((1 2 3) B) ((1 2 4) B) ((1 3 4) B) ((2 3 4) B))
- (PLATONIC:FACES ((1 2 3) R) ((1 2 4) R) ((1 3 4) R) ((2 3 4) R)))
+PLATONIC> (distinct-tetrahedron-colorings '(r g b))
+((FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) G) ((2 3 4) G))
+ (FACES ((1 2 3) R) ((1 2 4) G) ((1 3 4) G) ((2 3 4) B))
+ (FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) G) ((2 3 4) R))
+ (FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) G) ((2 3 4) B))
+ (FACES ((1 2 3) B) ((1 2 4) B) ((1 3 4) R) ((2 3 4) R))
+ (FACES ((1 2 3) R) ((1 2 4) G) ((1 3 4) B) ((2 3 4) B))
+ (FACES ((1 2 3) B) ((1 2 4) G) ((1 3 4) R) ((2 3 4) R))
+ (FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) B) ((2 3 4) B))
+ (FACES ((1 2 3) G) ((1 2 4) G) ((1 3 4) R) ((2 3 4) R))
+ (FACES ((1 2 3) R) ((1 2 4) B) ((1 3 4) B) ((2 3 4) B))
+ (FACES ((1 2 3) B) ((1 2 4) R) ((1 3 4) R) ((2 3 4) R))
+ (FACES ((1 2 3) G) ((1 2 4) B) ((1 3 4) B) ((2 3 4) B))
+ (FACES ((1 2 3) G) ((1 2 4) R) ((1 3 4) R) ((2 3 4) R))
+ (FACES ((1 2 3) B) ((1 2 4) B) ((1 3 4) B) ((2 3 4) B))
+ (FACES ((1 2 3) R) ((1 2 4) R) ((1 3 4) R) ((2 3 4) R)))
 ```
 
 There are 15 of them!
-
 
 ## Cube
 It's much the same for the cube, except that the rotational symmetry group is more complcated, having 24 elements:
 
 ```
-CL-USER> platonic:*cube-group*
+PLATONIC> *cube-group*
 (#(0 1 2 3 4 5 6 7 8) #(0 2 3 4 1 6 7 8 5) #(0 3 4 1 2 7 8 5 6)
  #(0 4 1 2 3 8 5 6 7) #(0 4 3 7 8 1 2 6 5) #(0 8 7 6 5 4 3 2 1)
  #(0 5 6 2 1 8 7 3 4) #(0 5 1 4 8 6 2 3 7) #(0 6 5 8 7 2 1 4 3)
@@ -138,13 +121,14 @@ CL-USER> platonic:*cube-group*
  #(0 6 2 1 5 7 3 4 8) #(0 3 2 6 7 4 1 5 8) #(0 6 7 3 2 5 8 4 1)
  #(0 8 4 3 7 5 1 2 6) #(0 3 7 8 4 2 6 5 1) #(0 8 5 1 4 7 6 2 3)
  #(0 2 1 5 6 3 4 8 7) #(0 7 3 2 6 8 4 1 5) #(0 7 8 4 3 6 5 1 2)
- #(0 5 8 7 6 1 4 3 2) #(0 4 8 5 1 3 7 6 2) #(0 7 6 5 8 3 2 1 4)) 
+ #(0 5 8 7 6 1 4 3 2) #(0 4 8 5 1 3 7 6 2) #(0 7 6 5 8 3 2 1 4))
+PLATONIC> 
 ```
 
 How many distinct ways are there to color a cube with three colors?
 
 ```
-CL-USER> (length (platonic:distinct-cube-colorings '(r g b)))
+PLATONIC> (length (distinct-cube-colorings '(r g b)))
 57
 ```
 
