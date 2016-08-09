@@ -1,5 +1,5 @@
 # Platonic
-Using groups to compute distinct ways of coloring regular solids. Platonic can find all distinct colorings for tetrahedrons and cubes. 
+Using group theory and brute-force to compute distinct ways of coloring regular solids, Platonic can find all ways to distinctly color tetrahedrons and cubes. The examples below involve coloring faces, but coloring of edges and vertices are also supported. In principle you can attach any sort of information to vertices, edges and faces and ask for the number of distinct configurations. 
 
 ## Setup
 If you don't have Steel Bank Common Lisp (SBCL), Qucklisp, Slime
@@ -14,12 +14,7 @@ You will have to let Quicklisp know that the project is there. Start Emacs, do `
 
 ```
 CL-USER> (ql:register-local-projects)
-NIL
 CL-USER> (ql:quickload :platonic)
-To load "platonic":
-  Load 1 ASDF system:
-    platonic
-; Loading "platonic"
 ```
 
 Now you can run the tests and see some nice output.
@@ -28,11 +23,27 @@ Now you can run the tests and see some nice output.
 CL-USER> (platonic:run-tests)
 ```
 
-### Tetrahedron
+If you don't want to keep typing the package-name prefix ```platonic:``` you can go inside the packages and work there. We will do it that way here. If you choose to work outside the package, remember that you have to resolve all symbols defined in Platonic, and that includes symbols like ```platonic:faces```. Look in ```package.lisp``` to see the exported symbols.
+
+```
+CL-USER> (in-package :platonic)
+#<PACKAGE "PLATONIC">
+PLATONIC> 
+```
+
+The SBCL prompt shows that we are in the platonic package.
+
+
+## Groups
+
+
+
+
+## Tetrahedron
 Rotational symmetries are represented by permutation vectors that act on vertices, edges or faces. The rotation group for the tetrahedron contains 12 elements. Let's take two and compose them.
 
 ```
-CL-USER> (setq a (nth 4 platonic:*tetrahedron-group*))
+PLATONIC> (setq a (nth 4 *tetrahedron-group*))
 #(0 3 2 4 1)
 CL-USER> (setq b (nth 7 platonic:*tetrahedron-group*))
 #(0 2 3 1 4)
@@ -80,7 +91,7 @@ CL-USER> (platonic:distinct-tetrahedron-colorings '(r g b))
 There are 15 of them!
 
 
-### Cube
+## Cube
 It's much the same for the cube, except that the rotational symmetry group is more complcated, having 24 elements:
 
 ```
