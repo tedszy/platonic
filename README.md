@@ -23,7 +23,7 @@ Now you can run the tests and see some nice output.
 CL-USER> (platonic:run-tests)
 ```
 
-If you don't want to keep typing the package-name prefix ```platonic:``` you can go inside the packages and work there. We will do it that way here. If you choose to work outside the package, remember that you have to resolve all symbols defined in Platonic, and that includes symbols like ```platonic:faces```. Look in ```package.lisp``` to see the exported symbols.
+If you don't want to keep typing the package-name prefix ```platonic:``` you can go inside the packages and work there. We will do it that way here. If you choose to work outside the package, remember that you have to resolve all symbols defined in Platonic, and that includes symbols like ```platonic:faces.``` Look in ```package.lisp``` to see the exported symbols.
 
 ```common-lisp
 CL-USER> (in-package :platonic)
@@ -35,7 +35,7 @@ The SBCL prompt shows that we are in the platonic package.
 
 
 ## Groups
-Group elements are represented by length n+1 permutation vectors. These vectors begin at index 1. The 0th index is unused. This is to conform with the convention used in all textbooks: a typical permutation is ```(1 3 2 4)``` not ```(0 2 1 3)```. We can create group elements and compose them with group multiplication ```g*```. For example,
+Group elements are represented by length n+1 permutation vectors. These vectors begin at index 1. The 0th index is unused. This is to conform with the convention used in all textbooks: a typical permutation is ```(1 3 2 4)``` not ```(0 2 1 3).``` We can create group elements and compose them with group multiplication ```g*.``` For example,
 
 ```common-lisp
 PLATONIC> (setq g1 (make-group-element '(1 4 2 3)))
@@ -110,7 +110,7 @@ PLATONIC> (distinct-tetrahedron-colorings '(r g b))
 There are 15 of them!
 
 ## Cube
-It's much the same for the cube, except that the rotational symmetry group is more complcated, having 24 elements:
+It's much the same for the cube, except that the rotational symmetry group is more compilcated, having 24 elements:
 
 ```common-lisp
 PLATONIC> *cube-group*
