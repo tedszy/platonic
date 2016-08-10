@@ -8,7 +8,7 @@
 	   #:has-identity-property-p
 	   #:has-inverse-property-p
 	   #:has-closure-property-p
-	   #:transform-vef
+	   #:transform-vertex/edge/face
 	   #:transform-configuration
 	   #:faces
 	   #:make-tetrahedron-configuration

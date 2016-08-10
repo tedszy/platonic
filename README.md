@@ -48,10 +48,10 @@ PLATONIC> (g* g1 g2 g3)
 #(0 4 2 3 1)
 ```
 
-Geometrical entites like vertices, edges and faces are handled with a uniform interface: they are all simply lists. A vertex is a list of one label, an edge has two, and a face has three or more. Group elements can be appled to vertices, edges or faces (vefs), e.g.,
+Geometrical entites like vertices, edges and faces are handled with a uniform interface: they are all simply lists. A vertex is a list of one label, an edge has two, and a face has three or more. Group elements can be appled to vertices, edges or faces, e.g.,
 
 ```common-lisp
-PLATONIC> (transform-vef g1 '(1 3 4))
+PLATONIC> (transform-vertex/edge/face g1 '(1 3 4))
 (1 2 3)
 ```
 

@@ -90,14 +90,14 @@
 ;;  0 1 2 3 4
 ;;
 ;; => a*10^4 + b*10^3 + c*10^2 + d*10^1 + e*1.
-(defun hash-vef (vef)
+(defun hash-vertex/edge/face (vef)
   (loop for u in (sort vef #'<)
        with multiplier = (expt 10 (1- (length vef)))
        summing (* u multiplier)
        do (setf multiplier (/ multiplier 10))))
        
 ;; Transform geometric vef by applying group-element.
-(defun transform-vef (g vef)
+(defun transform-vertex/edge/face (g vef)
   (loop for v in vef collecting (svref g v)))
 
 ;; Configurations are lists of vertices/edges/faces with extra 
@@ -110,10 +110,11 @@
 (defun transform-configuration (g config)
   (cons (car config)
 	(sort (loop for c in (cdr config)
-		 collecting (list (sort (transform-vef g (car c)) #'<)
+		 collecting (list (sort (transform-vertex/edge/face 
+					 g (car c)) #'<)
 				  (cadr c)))
 	      #'<
-	      :key #'(lambda (c) (hash-vef (car c))))))
+	      :key #'(lambda (c) (hash-vertex/edge/face (car c))))))
 
 (defun cartesian-product (&rest lists)
   (if (car lists)
@@ -122,4 +123,9 @@
                         (car lists)))
               (apply #'cartesian-product (cdr lists)))
       (list nil)))
+
+
+
+
+
 

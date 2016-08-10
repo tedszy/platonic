@@ -46,10 +46,10 @@
   (test-me eq t (has-inverse-property-p *cube-group*))
   (test-me eq t (has-closure-property-p *cube-group*)))
 
-(defun test-vef ()
-  (test-me = 2356 (hash-vef '(6 2 3 5)))
+(defun test-vertex/edge/face ()
+  (test-me = 2356 (hash-vertex/edge/face '(6 2 3 5)))
   (let ((id (make-group-element '(1 2 3 4))))
-    (test-me equalp '(1 2 3) (transform-vef id '(1 2 3)))))
+    (test-me equalp '(1 2 3) (transform-vertex/edge/face id '(1 2 3)))))
 
 ;; Take advantage of the fact that faces are transformed
 ;; just like vertices for a tetrahedron.
@@ -91,7 +91,7 @@
   (test-group-elements)
   (test-tetrahedron-group)
   (test-cube-group)
-  (test-vef)
+  (test-vertex/edge/face)
   (test-configuration)
   (test-against-burnside)
   (format t "ok: ~a~%" '(travel... without moving))
