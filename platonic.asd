@@ -3,7 +3,7 @@
     :author "Ted Szylowiec <tedszy@gmail.com>"
     :license "None yet."
     :serial t
-    ;; :depends-on ()
+    :depends-on (#:cl-pentothal)
     :components ((:file "package")
 		 (:file "platonic")
 		 (:file "tetrahedron")
