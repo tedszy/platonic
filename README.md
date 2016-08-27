@@ -3,12 +3,12 @@ Using group theory and brute-force to compute distinct ways of coloring regular 
 
 ## Setup
 If you don't have Steel Bank Common Lisp (SBCL), Qucklisp, Slime
-and Emacs set up, [watch this video.](https://www.youtube.com/watch?v=VnWVu8VVDbI) Once you have that set up (as well as git), clone this repo into quicklisp/local-projects and also the ```cl-pentothal``` testing framework.
+and Emacs set up, [watch this video.](https://www.youtube.com/watch?v=VnWVu8VVDbI) Once you have that set up (as well as git), clone this repo into quicklisp/local-projects and also the ```pentothal``` testing framework.
 
 ```
 $ cd ~/quicklisp/local-projects
 $ git clone https://github.com/tedszy/platonic.git
-$ git clone https://github.com/tedszy/cl-pentothal.git
+$ git clone https://github.com/tedszy/pentothal.git
 ```
 
 You will have to let Quicklisp know that both projects are there by registering them. Start Emacs, do ```M-x slime``` and...
