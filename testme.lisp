@@ -17,6 +17,8 @@
 
 (init-testing)
 
+(in-group 'groups)
+
 (test group-elements (make-group-element '(1 2 3 4)) equalp  #(0 1 2 3 4))
 (let ((s (make-group-element '(4 3 2 1)))
       (r (make-group-element '(1 3 4 2))))
@@ -31,6 +33,8 @@
 (test cube-identity (has-identity-property-p *cube-group*) eq t)
 (test cube-inverses (has-inverse-property-p *cube-group*) eq t)
 (test cube-closure (has-closure-property-p *cube-group*) eq t)
+
+(in-group 'geometry)
 
 (test vertex/edge/face-hash (hash-vertex/edge/face '(6 2 3 5)) = 2356)
 (let ((id (make-group-element '(1 2 3 4))))
@@ -47,6 +51,8 @@
 	(transform-configuration h c)
 	equalp
 	'(faces ((1 2 3) B) ((1 2 4) D) ((1 3 4) A) ((2 3 4) C))))
+
+(in-group 'tetrahedron-and-cube)
 
 (test tetrahedron-2 (length (distinct-tetrahedron-colorings '(r g))) = (burnside-tetrahedron 2))
 (test tetrahedron-3 (length (distinct-tetrahedron-colorings '(r g b))) = (burnside-tetrahedron 3))

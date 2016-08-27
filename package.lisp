@@ -1,5 +1,5 @@
 (defpackage #:platonic
-  (:use #:cl #:cl-pentothal)
+  (:use #:cl #:pentothal)
   (:export #:run-tests
 	   #:*tetrahedron-group*
 	   #:*cube-group*
